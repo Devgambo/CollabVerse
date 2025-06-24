@@ -1,16 +1,10 @@
 import Navbar from "@/components/Navbar";
+import { Providers } from "./LiveblocksProvider";
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <div>
-      <nav>
-        <Navbar />
-      </nav>
-      {children}
-    </div>
-  );
+  return <Providers>{children}</Providers>;
 }

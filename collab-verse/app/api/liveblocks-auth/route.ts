@@ -1,5 +1,3 @@
-"use server";
-
 import { Liveblocks } from "@liveblocks/node";
 import { currentUser } from "@clerk/nextjs/server";
 

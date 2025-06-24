@@ -46,4 +46,39 @@ declare global {
   }
 }
 
-export {};
+import { createClient } from "@liveblocks/client";
+import { createRoomContext } from "@liveblocks/react";
+
+// Types for Liveblocks awareness
+export type UserAwareness = {
+  user: {
+    name: string;
+    color: string;
+    avatar?: string;
+  };
+};
+
+export type AwarenessList = [number, { user: UserAwareness["user"] }][];
+
+// Define presence for collaboration features
+type Presence = {
+  cursor: { x: number; y: number } | null;
+};
+
+// Define storage schema if needed
+type Storage = {
+  // Add any persistent data structures here
+};
+
+export const client = createClient({
+  authEndpoint: "/api/liveblocks-auth",
+});
+
+export const {
+  RoomProvider,
+  useRoom,
+  useMyPresence,
+  useOthers,
+  useSelf,
+  useStorage,
+} = createRoomContext<Presence, Storage>(client);
