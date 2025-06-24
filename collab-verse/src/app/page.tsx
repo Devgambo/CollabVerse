@@ -6,7 +6,7 @@ import {
   useMutation,
   useQuery,
 } from "convex/react";
-import { api } from "../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";

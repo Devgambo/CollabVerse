@@ -1,8 +1,8 @@
 "use client";
 
-import { CollaborativeEditor } from "@/components/ColloborativeEditor";
-import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
+import { CollaborativeEditor } from "@/src/components/ColloborativeEditor";
+import Navbar from "@/src/components/Navbar";
+import { Button } from "@/src/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LiveblocksProvider, RoomProvider } from "@liveblocks/react/suspense";
 import React, { Suspense, useState } from "react";
