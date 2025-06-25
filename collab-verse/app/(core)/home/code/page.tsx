@@ -53,26 +53,7 @@ export default function CodePage() {
           </div>
 
           {/* Sidebar */}
-          {isSideBarOpen && (
-            <div className="w-1/4 border-l border-[#333] bg-[#111] p-4 overflow-y-auto">
-              <h2 className="text-lg font-medium mb-4">Project Files</h2>
-              <div className="space-y-2">
-                {/* Files list would go here */}
-                <div className="px-2 py-1 hover:bg-[#222] rounded cursor-pointer flex items-center">
-                  <span className="text-blue-400 mr-2">📄</span>
-                  <span>main.ts</span>
-                </div>
-                <div className="px-2 py-1 hover:bg-[#222] rounded cursor-pointer flex items-center">
-                  <span className="text-purple-400 mr-2">📄</span>
-                  <span>index.html</span>
-                </div>
-                <div className="px-2 py-1 hover:bg-[#222] rounded cursor-pointer flex items-center">
-                  <span className="text-green-400 mr-2">📄</span>
-                  <span>styles.css</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <Sidebar isSideBarOpen={isSideBarOpen} />
         </div>
 
         {/* Toggle sidebar button */}
@@ -108,3 +89,91 @@ export default function CodePage() {
     </Room>
   );
 }
+
+const options = [
+  { name: "/summarize", trigger: "Summarize" },
+  { name: "/ai", trigger: "General" },
+  { name: "/simplify", trigger: "Simplify" },
+  { name: "/check", trigger: "Check" },
+];
+
+const Sidebar = ({ isSideBarOpen }: { isSideBarOpen: boolean }) => {
+  return (
+    <div className="w-full h-full">
+      {isSideBarOpen && (
+        <div className="w-full h-full border-l border-[#333] bg-[#111] p-4 overflow-y-auto flex flex-col">
+          <h2 className="text-lg text-white font-medium mb-4">Team Chat</h2>
+          <div className="flex-1 space-y-4 overflow-y-auto">
+            {/* Example chat messages */}
+            <div className="flex items-start gap-2">
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                A
+              </div>
+              <div>
+                <div className="bg-[#222] text-white px-3 py-2 rounded-lg max-w-xs">
+                  Hey team, should we refactor the main function?
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Alice • 10:01 AM
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2 flex-row-reverse">
+              <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white font-bold">
+                Y
+              </div>
+              <div>
+                <div className="bg-[#1a3a1a] text-white px-3 py-2 rounded-lg max-w-xs">
+                  Yes, I think that's a good idea!
+                </div>
+                <div className="text-xs text-gray-400 mt-1 text-right">
+                  You • 10:02 AM
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
+                🤖
+              </div>
+              <div>
+                <div className="bg-[#22224a] text-white px-3 py-2 rounded-lg max-w-xs">
+                  I suggest extracting helper functions for better readability.
+                </div>
+                <div className="text-xs text-gray-400 mt-1">AI • 10:03 AM</div>
+              </div>
+            </div>
+          </div>
+          {/* Chat input */}
+          <div className="flex items-center justify-center gap-2 mb-2">
+            {options.map((option) => (
+              <button
+                key={option.name}
+                className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-medium transition-colors duration-200 shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+                type="button"
+                disabled
+                title={option.trigger}
+              >
+                {option.name}
+              </button>
+            ))}
+          </div>
+          <form className="mt-4 flex gap-2">
+            <input
+              type="text"
+              className="flex-1 bg-[#222] text-white px-3 py-2 rounded-lg outline-none"
+              placeholder="Type your message..."
+              disabled
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+              disabled
+            >
+              Send
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+};

@@ -7,7 +7,7 @@ import { Editor } from "@monaco-editor/react";
 import { editor } from "monaco-editor";
 import { MonacoBinding } from "y-monaco";
 import { Awareness } from "y-protocols/awareness";
-// import { Cursors } from "./Cursor";
+import { Cursors } from "./Cursors";
 import { Toolbar } from "@/components/Toolbar";
 
 // Collaborative code editor with undo/redo, live cursors, and live avatars
@@ -44,8 +44,8 @@ export function CollaborativeEditor() {
 
   return (
     <div className="flex flex-col h-full w-full bg-black rounded-lg shadow-md overflow-hidden">
-      {/* {provider ? <Cursors yProvider={provider} /> : null} */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50">
+      {provider ? <Cursors yProvider={provider} /> : null}
+      <div className="flex items-center justify-between px-4 py-2 border-b bg-black">
         <div>{editorRef ? <Toolbar editor={editorRef} /> : null}</div>
       </div>
       <div className="flex-1 min-h-0">
@@ -53,7 +53,7 @@ export function CollaborativeEditor() {
           onMount={handleOnMount}
           height="100%"
           width="100vw"
-          theme="vs-light"
+          theme="vs-dark"
           defaultLanguage="typescript"
           defaultValue=""
           options={{
