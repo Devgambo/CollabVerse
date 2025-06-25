@@ -1,5 +1,3 @@
-"use server";
-
 import { Liveblocks } from "@liveblocks/node";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -17,6 +15,7 @@ export async function POST(request: Request) {
   const session = liveblocks.prepareSession(user.id, {
     userInfo: {
       name: user?.firstName || "Unknown",
+      nickname: user?.username,
       email: user?.emailAddresses[0]?.emailAddress || "",
       avatar: user?.imageUrl || "",
     },
