@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSelf } from "@liveblocks/react/suspense";
-import { AwarenessList, UserAwareness } from "@/liveblocks.config";
+import { AwarenessList, UserAwareness } from "@/src/liveblocks.config";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { generateRandomColor } from "@/src/lib/utils"; // You'll need to create this
 
@@ -10,9 +10,16 @@ type Props = {
   yProvider: LiveblocksYjsProvider;
 };
 
+export interface User {
+  name: string;
+  username: string;
+  email: string;
+  avatar: string;
+}
+
 export function Cursors({ yProvider }: Props) {
   // Get user info from Liveblocks authentication endpoint
-  const userInfo = useSelf((me) => me.info);
+  const userInfo = useSelf((me) => me.info) as User | undefined;
   const [awarenessUsers, setAwarenessUsers] = useState<AwarenessList>([]);
 
   useEffect(() => {

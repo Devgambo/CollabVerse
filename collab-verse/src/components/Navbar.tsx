@@ -8,7 +8,6 @@ export default function Navbar() {
   const [activeTab, setActiveTab] = useState("Code Ed");
   const { user } = useUser();
   const others = useOthers();
-  const currentUser = useSelf();
 
   const tabs = [{ name: "Code Ed" }, { name: "Text Ed" }, { name: "Canvas" }];
 
@@ -83,17 +82,20 @@ export default function Navbar() {
           </div>
 
           {/* Other users avatars */}
-          {others.map((person) => (
-            <div
-              key={person.connectionId}
-              className="w-8 h-8 rounded-full border-2 border-[#0f0f0f] flex items-center justify-center text-xs font-semibold text-white"
-              style={{
-                background: getUserColor(person.connectionId.toString()),
-              }}
-            >
-              {person.info?.name?.charAt(0) || "UK"}
-            </div>
-          ))}
+          {others.map((person) => {
+            const info = person.info as { name?: string } | undefined;
+            return (
+              <div
+                key={person.connectionId}
+                className="w-8 h-8 rounded-full border-2 border-[#0f0f0f] flex items-center justify-center text-xs font-semibold text-white"
+                style={{
+                  background: getUserColor(person.connectionId.toString()),
+                }}
+              >
+                {info?.name?.charAt(0) || "UK"}
+              </div>
+            );
+          })}
         </div>
 
         {/* Share button */}
