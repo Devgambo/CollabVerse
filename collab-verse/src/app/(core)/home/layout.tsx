@@ -1,4 +1,4 @@
-import Navbar from "@/components/Navbar";
+import Navbar from "@/src/components/Navbar";
 import { Providers } from "./LiveblocksProvider";
 
 export default function RootLayout({

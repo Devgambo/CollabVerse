@@ -8,7 +8,7 @@ import { editor } from "monaco-editor";
 import { MonacoBinding } from "y-monaco";
 import { Awareness } from "y-protocols/awareness";
 import { Cursors } from "./Cursors";
-import { Toolbar } from "@/components/Toolbar";
+import { Toolbar } from "@/src/components/Toolbar";
 
 // Collaborative code editor with undo/redo, live cursors, and live avatars
 export function CollaborativeEditor() {

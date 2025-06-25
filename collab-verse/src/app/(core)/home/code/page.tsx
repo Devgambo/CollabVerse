@@ -3,15 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { LiveblocksProvider, RoomProvider } from "@liveblocks/react/suspense";
-import { cn } from "@/lib/utils";
-import Navbar from "@/components/Navbar";
+import { cn } from "@/src/lib/utils";
+import Navbar from "@/src/components/Navbar";
 import Room from "../Room";
 
 // Dynamically import CollaborativeEditor with no SSR
 const CollaborativeEditorWithNoSSR = dynamic(
   () =>
-    import("@/components/ColloborativeEditor").then(
+    import("@/src/components/ColloborativeEditor").then(
       (mod) => mod.CollaborativeEditor,
     ),
   { ssr: false },

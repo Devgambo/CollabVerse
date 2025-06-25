@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSelf } from "@liveblocks/react/suspense";
 import { AwarenessList, UserAwareness } from "@/liveblocks.config";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
-import { generateRandomColor } from "@/lib/utils"; // You'll need to create this
+import { generateRandomColor } from "@/src/lib/utils"; // You'll need to create this
 
 type Props = {
   yProvider: LiveblocksYjsProvider;
