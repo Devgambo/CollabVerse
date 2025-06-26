@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+
     users: defineTable({
         userId: v.string(), // clerkId
         username: v.string(),
@@ -10,7 +11,7 @@ export default defineSchema({
     }).index("by_user_id", ["userId"]),
 
     rooms: defineTable({
-        title: v.string(),
+        name: v.string(),
         ownerId: v.string(), // Clerk user ID
         roomType: v.union(v.literal("collab"), v.literal("mentor")),
         createdAt: v.number(),
@@ -45,7 +46,7 @@ export default defineSchema({
     messages: defineTable({
         roomId: v.id("rooms"),
         userId: v.union(v.string(), v.null()), // Null for AI messages
-        text: v.string(),
+        text: v.string(),   //TODO: set lim to 100 words
         isAI: v.boolean(),
         createdAt: v.number(),
     }).index("by_room", ["roomId"]),
