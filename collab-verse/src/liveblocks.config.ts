@@ -4,14 +4,14 @@ declare global {
   interface Liveblocks {
     // Each user's Presence, for useMyPresence, useOthers, etc.
     Presence: {
-      // Example, real-time cursor coordinates
-      // cursor: { x: number; y: number };
+      cursor: { x: number; y: number } | null;
+      selectedFileId: string | null;
     };
 
     // The Storage tree for the room, for useMutation, useStorage, etc.
     Storage: {
-      // Example, a conflict-free list
-      // animals: LiveList<string>;
+      files: LiveMap<string, string>;
+      whiteboard: LiveList<any>;
     };
 
     // Custom user info set when authenticating with a secret key
@@ -48,6 +48,7 @@ declare global {
 
 import { createClient } from "@liveblocks/client";
 import { createRoomContext } from "@liveblocks/react";
+import { LiveMap, LiveList } from "@liveblocks/client";
 
 // Types for Liveblocks awareness
 export type UserAwareness = {
@@ -63,11 +64,13 @@ export type AwarenessList = [number, { user: UserAwareness["user"] }][];
 // Define presence for collaboration features
 type Presence = {
   cursor: { x: number; y: number } | null;
+  selectedFileId: string | null;
 };
 
 // Define storage schema if needed
 type Storage = {
-  // Add any persistent data structures here
+  files: LiveMap<string, string>;
+  whiteboard: LiveList<any>;
 };
 
 export const client = createClient({

@@ -13,6 +13,8 @@ export async function POST(request: Request) {
   }
 
   console.log("Auth endpoint: User ID:", user?.id);
+
+  //TODO: also pass room id here
   const { status, body } = await liveblocks.identifyUser(
     {
       userId: user.id,
