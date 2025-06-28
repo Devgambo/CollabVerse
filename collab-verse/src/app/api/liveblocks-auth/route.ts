@@ -22,8 +22,12 @@ export async function POST(request: Request) {
     },
     {
       userInfo: {
+        name: user.firstName
+          ? user.firstName
+          : user.username ||
+            user.emailAddresses[0]?.emailAddress ||
+            "Anonymous",
         email: user.emailAddresses[0].emailAddress,
-        username: user.username,
         avatar: user.imageUrl,
       },
     },
