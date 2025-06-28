@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { cn } from "@/src/lib/utils";
 import Navbar from "@/src/components/Navbar";
-import Room from "../Room";
 
 // Dynamically import CollaborativeEditor with no SSR
 const CollaborativeEditorWithNoSSR = dynamic(
@@ -34,58 +33,56 @@ export default function CodePage() {
   };
 
   return (
-    <Room>
-      <div className="h-screen flex flex-col">
-        <Navbar />
+    <div className="h-screen flex flex-col">
+      <Navbar />
 
-        {/* Main content */}
-        <div className="flex-1 flex">
-          <div
-            className={cn(
-              "h-full flex flex-col transition-all duration-300",
-              isSideBarOpen ? "w-3/4" : "w-full",
-            )}
-          >
-            <div className="flex-1 overflow-hidden relative">
-              <CollaborativeEditorWithNoSSR />
-            </div>
+      {/* Main content */}
+      <div className="flex-1 flex">
+        <div
+          className={cn(
+            "h-full flex flex-col transition-all duration-300",
+            isSideBarOpen ? "w-3/4" : "w-full",
+          )}
+        >
+          <div className="flex-1 overflow-hidden relative">
+            <CollaborativeEditorWithNoSSR />
           </div>
-
-          {/* Sidebar */}
-          <Sidebar isSideBarOpen={isSideBarOpen} />
         </div>
 
-        {/* Toggle sidebar button */}
-        <button
-          onClick={toggleSidebar}
-          className="absolute bottom-4 right-4 bg-[#222] hover:bg-[#333] text-white p-2 rounded-full shadow-lg z-10"
-          aria-label="Toggle sidebar"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            {isSideBarOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            )}
-          </svg>
-        </button>
+        {/* Sidebar */}
+        <Sidebar isSideBarOpen={isSideBarOpen} />
       </div>
-    </Room>
+
+      {/* Toggle sidebar button */}
+      <button
+        onClick={toggleSidebar}
+        className="absolute bottom-4 right-4 bg-[#222] hover:bg-[#333] text-white p-2 rounded-full shadow-lg z-10"
+        aria-label="Toggle sidebar"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          {isSideBarOpen ? (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          )}
+        </svg>
+      </button>
+    </div>
   );
 }
 

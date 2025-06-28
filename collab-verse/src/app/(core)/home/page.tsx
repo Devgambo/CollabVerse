@@ -14,7 +14,14 @@ import {
 } from "@/src/components/ui/card";
 import { Avatar, AvatarFallback } from "@/src/components/ui/avatar";
 import { toast } from "sonner";
-import { Loader2, PlusCircle, Clock, Users, ArrowRight } from "lucide-react";
+import {
+  Loader2,
+  PlusCircle,
+  Clock,
+  Users,
+  ArrowRight,
+  Trash2,
+} from "lucide-react";
 import { Separator } from "@/src/components/ui/separator";
 import { motion } from "framer-motion";
 
@@ -49,6 +56,7 @@ export default function HomePage() {
   };
 
   const handleRoomCreation = async () => {
+    setIsLoading(true);
     if (!roomName.trim()) {
       toast.error("Please enter a room name");
       return;
@@ -79,11 +87,41 @@ export default function HomePage() {
       toast.error("Network error. Could not connect to the server.");
     } finally {
       setIsCreating(false);
+      setIsLoading(false);
     }
   };
 
   const joinRoom = (roomId: string) => {
     router.push(`/home/${roomId}`);
+  };
+
+  const deleteRoom = async (roomId: string, ownerId: string) => {
+    setIsLoading(true);
+    console.log("ownerId ", ownerId);
+    try {
+      const response = await fetch("/api/rooms", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ roomId, ownerId }),
+      });
+
+      const body = await response.json();
+
+      if (response.ok) {
+        toast.success("Room deleted successfully");
+        // Fetch updated list of rooms
+        fetchRooms();
+      } else {
+        toast.error(body.error || "Failed to delete room");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error. Could not connect to the server.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -198,13 +236,25 @@ export default function HomePage() {
                             </div>
                           </div>
                         </div>
-                        <Button
-                          onClick={() => joinRoom(room._id)}
-                          size="sm"
-                          className="gap-1"
-                        >
-                          Join <ArrowRight size={14} />
-                        </Button>
+                        <div>
+                          <Button
+                            variant="outline"
+                            onClick={() => joinRoom(room._id)}
+                            size="sm"
+                            className="gap-1 mx-2"
+                          >
+                            Join <ArrowRight size={14} />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => deleteRoom(room._id, room.ownerId)}
+                            size="sm"
+                            className="gap-1"
+                          >
+                            Delete
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
