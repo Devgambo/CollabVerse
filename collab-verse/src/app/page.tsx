@@ -37,7 +37,7 @@ function RedirectToDashboard() {
     <div className="flex flex-col items-center justify-center h-[80vh]">
       <h1 className="text-3xl font-bold mb-6">Welcome back!</h1>
       <Link
-        href="/code"
+        href="/home"
         className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-md font-medium transition-colors"
       >
         Go to Editor

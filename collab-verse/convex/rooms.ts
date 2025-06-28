@@ -10,13 +10,14 @@ export const createRoom = mutation({
   },
 
   handler: async (ctx, args) => {
-    await ctx.db.insert("rooms", {
+    const roomId = await ctx.db.insert("rooms", {
       name: args.name,
       ownerId: args.ownerId,
       roomType: args.roomType,
       createdAt: Date.now(),
-      lastAccessed: 1,
+      lastAccessed: Date.now(),
     });
+    return { _id: roomId };
   },
 });
 
@@ -40,13 +41,42 @@ export const getRoomById = query({
     roomId: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
-      .query("rooms")
-      .filter((q) => q.eq(q.field("_id"), args.roomId))
-      .first();
+    const roomId = ctx.db.normalizeId("rooms", args.roomId); // Best practice : I have used normalizeId function instead of q.eq....
+    if (!roomId) return null;
+
+    return await ctx.db.get(roomId);
   },
 });
 
+export const deleteRoom = mutation({
+  args: {
+    roomId: v.string(),
+    ownerId: v.string(),
+  },
+
+  handler: async (ctx, args) => {
+    //handle bad roomId
+    const roomId = ctx.db.normalizeId("rooms", args.roomId);
+
+    if (!roomId) {
+      return null;
+    }
+
+    const room = await ctx.db.get(roomId);
+
+    if (!room) {
+      return { success: false, error: "Room Not Found" };
+    }
+
+    if (room.ownerId !== args.ownerId) {
+      return { success: false, error: "Unauthorized: Not the room owner" };
+    }
+
+    await ctx.db.delete(roomId);
+
+    return { success: true, roomId: args.roomId };
+  },
+});
 
 // convex/queries/getRoomData.ts
 export const getRoomData = query({

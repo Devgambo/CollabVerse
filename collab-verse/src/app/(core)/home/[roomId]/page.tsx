@@ -107,9 +107,9 @@ export default function RoomSettingsPage() {
       </div>
 
       <Button
-        variant="outline"
+        variant="default"
         onClick={() => {
-          router.push("/code");
+          router.push(`/home/${id}/code`);
         }}
       >
         Let's Manifest!!
