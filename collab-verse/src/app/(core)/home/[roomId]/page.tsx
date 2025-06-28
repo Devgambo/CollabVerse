@@ -1,13 +1,19 @@
 "use client";
 
-import { Button } from "@/src/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu";
-import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
+import { Loader2, UserPlus, Settings, Info } from "lucide-react";
+
+import RoomInfoForm from "./components/RoomInfoForm";
+import EditorSettingsForm from "./components/EditorSettingsForm";
+import UserManagementSection from "./components/UserManagementSection";
 
 export default function RoomSettingsPage() {
   const params = useParams();
@@ -15,6 +21,7 @@ export default function RoomSettingsPage() {
   const id = params.roomId as string;
   const [room, setRoom] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("room-info");
 
   useEffect(() => {
     fetchRoomById(id);
@@ -22,98 +29,83 @@ export default function RoomSettingsPage() {
 
   const fetchRoomById = async (roomId: string) => {
     try {
-      // Fetch just this specific room
       const response = await fetch(`/api/rooms/${roomId}`);
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         setRoom(data);
       } else {
-        // Handle error
+        toast.error("Failed to load room data");
       }
     } catch (error) {
       console.error("Error fetching room:", error);
+      toast.error("Something went wrong while loading the room");
     } finally {
       setIsLoading(false);
     }
   };
 
   if (isLoading) {
-    return <div>Loading room data...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2">Loading room settings...</span>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-bold mb-4 flex items-center gap-2">
-        {room?.name}
-        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-          {room?.roomType?.toUpperCase() || "ROOM"}
-        </span>
-      </h1>
-      <div className="mb-4">
-        <span className="block text-sm text-gray-500">Room ID:</span>
-        <span className="font-mono text-base">{room?.id}</span>
-      </div>
-      <div className="mb-4">
-        <span className="block text-sm text-gray-500">Owner:</span>
-        <span className="font-mono text-base">{room?.ownerId}</span>
-      </div>
-      <div className="mb-4">
-        <span className="block text-sm text-gray-500">Created At:</span>
-        <span className="font-mono text-base">
-          {room?.createdAt
-            ? new Date(Number(room.createdAt)).toLocaleString()
-            : "Unknown"}
-        </span>
-      </div>
-      <div className="mb-4">
-        <span className="block text-sm text-gray-500">Access:</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-32">
-              {room?.isPublic ? "Public" : "Private"}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-32">
-            <Button
-              variant="ghost"
-              className={`justify-start w-full ${room?.isPublic ? "font-bold" : ""}`}
-              onClick={() => {}}
-            >
-              Public
-            </Button>
-            <Button
-              variant="ghost"
-              className={`justify-start w-full ${!room?.isPublic ? "font-bold" : ""}`}
-              onClick={() => {}}
-            >
-              Private
-            </Button>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="mb-4">
-        <span className="block text-sm text-gray-500">Default Accesses:</span>
-        <div className="flex flex-wrap gap-2 mt-1">
-          {room?.defaultAccesses?.map((access: string) => (
-            <span
-              key={access}
-              className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded"
-            >
-              {access}
-            </span>
-          ))}
-        </div>
+    <div className="container max-w-4xl mx-auto py-8 px-4">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">{room?.name}</h1>
+        <p className="text-muted-foreground">
+          Manage room settings and permissions
+        </p>
       </div>
 
-      <Button
-        variant="default"
-        onClick={() => {
-          router.push(`/home/${id}/code`);
-        }}
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
       >
-        Let's Manifest!!
-      </Button>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="room-info" className="flex items-center gap-2">
+            <Info className="w-4 h-4" />
+            Room Information
+          </TabsTrigger>
+          <TabsTrigger
+            value="room-settings"
+            className="flex items-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            Editor Settings
+          </TabsTrigger>
+          <TabsTrigger value="room-users" className="flex items-center gap-2">
+            <UserPlus className="w-4 h-4" />
+            User Management
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="room-info">
+          <RoomInfoForm room={room} roomId={id} onUpdate={fetchRoomById} />
+        </TabsContent>
+
+        <TabsContent value="room-settings">
+          <EditorSettingsForm
+            room={room}
+            roomId={id}
+            onUpdate={fetchRoomById}
+          />
+        </TabsContent>
+
+        <TabsContent value="room-users">
+          <UserManagementSection
+            room={room}
+            roomId={id}
+            onUpdate={fetchRoomById}
+            onGoToWorkspace={() => router.push(`/home/${id}/code`)}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

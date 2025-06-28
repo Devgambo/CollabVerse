@@ -70,67 +70,60 @@ export async function GET(
   }
 }
 
-// export async function PATCH(
-//   request: Request,
-//   { params }: { params: { roomId: string } },
-// ) {
-//   const user = await currentUser();
+export async function PATCH(
+  request: Request,
+  { params }: { params: { roomId: string } },
+) {
+  const user = await currentUser();
+  if (!user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-//   if (!user?.id) {
-//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//   }
+  const roomId = params.roomId;
+  if (!roomId) {
+    return NextResponse.json({ error: "Room ID required" }, { status: 400 });
+  }
 
-//   const roomId = params.roomId;
-//   console.log(roomId);
+  try {
+    const body = await request.json();
+    const convex = new ConvexHttpClient(
+      process.env.NEXT_PUBLIC_CONVEX_URL || "",
+    );
 
-//   if (!roomId) {
-//     return NextResponse.json({ error: "Not a valid roomId" }, { status: 404 });
-//   }
+    // Determine which update to perform based on the 'type' field
+    switch (body.type) {
+      case "roomInfo":
+        const roomInfo = await convex.mutation(api.rooms.updateRoomInfo, {
+          roomId,
+          ...body.data,
+        });
+        return NextResponse.json(roomInfo);
 
-//   try {
-//     const convex = new ConvexHttpClient(
-//       process.env.NEXT_PUBLIC_CONVEX_URL || "",
-//     );
+      case "roomContent":
+        const roomContent = await convex.mutation(api.rooms.updateRoomContent, {
+          roomId,
+          ...body.data,
+        });
+        return NextResponse.json(roomContent);
 
-//     const roomData = await convex.query(api.rooms.getRoomById, {
-//       roomId: roomId,
-//     });
+      case "roomUser":
+        const roomUser = await convex.mutation(api.rooms.updateRoomUser, {
+          roomId,
+          ...body.data,
+        });
+        return NextResponse.json(roomUser);
 
-//     if (!roomData) {
-//       return NextResponse.json({ error: "Room not found" }, { status: 404 });
-//     }
-
-//     const body = await request.json();
-
-//     const roomMetadata = {
-//       name: body.name,
-//       ownerId: user.id,
-//       createdAt: String(roomData.createdAt ?? new Date().getTime()),
-//     };
-
-//     const isPublic = body.isPublic;
-//     const liveblocksRoom = await liveblocks.getOrCreateRoom(roomId, {
-//       defaultAccesses: isPublic ? ["room:write"] : [],
-//       metadata: roomMetadata,
-//       usersAccesses: {
-//         [roomData.ownerId]: ["room:write"],
-//       },
-//     });
-
-//     return NextResponse.json(
-//       {
-//         ...roomData,
-//         liveblocks: {
-//           ...liveblocksRoom,
-//         },
-//       },
-//       { status: 200 },
-//     );
-//   } catch (error) {
-//     console.error("Error accessing room:", error);
-//     return NextResponse.json(
-//       { error: "Failed to access room" },
-//       { status: 500 },
-//     );
-//   }
-// }
+      default:
+        return NextResponse.json(
+          { error: "Invalid update type" },
+          { status: 400 },
+        );
+    }
+  } catch (error) {
+    console.error("Error updating room:", error);
+    return NextResponse.json(
+      { error: "Failed to update room" },
+      { status: 500 },
+    );
+  }
+}
