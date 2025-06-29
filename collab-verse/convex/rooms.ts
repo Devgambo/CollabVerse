@@ -52,10 +52,27 @@ export const getRoomUsers = query({
   },
 
   handler: async (ctx, args) => {
-    return await ctx.db
+    // Get all roomUsers for the room
+    const roomUsers = await ctx.db
       .query("roomUsers")
       .filter((room) => room.eq(room.field("roomId"), args.roomId))
       .collect();
+
+    const users = await Promise.all(
+      roomUsers.map(async (roomUser) => {
+        const user = await ctx.db
+          .query("users")
+          .filter((u) => u.eq(u.field("userId"), roomUser.userId))
+          .first();
+
+        return {
+          ...roomUser,
+          user: user ? { name: user.username, email: user.email } : null,
+        };
+      }),
+    );
+
+    return users;
   },
 });
 

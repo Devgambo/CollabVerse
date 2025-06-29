@@ -18,7 +18,8 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const roomId = await params.roomId;
+  const param = await params;
+  const roomId = param.roomId;
   console.log(roomId);
 
   if (!roomId) {

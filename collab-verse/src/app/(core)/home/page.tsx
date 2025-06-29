@@ -92,12 +92,18 @@ export default function HomePage() {
   };
 
   const joinRoom = (roomId: string) => {
-    router.push(`/home/${roomId}`);
+    try {
+      setIsLoading(true);
+      router.push(`/home/${roomId}`);
+    } catch {
+      toast.error("Couldn't redirect to room settings page");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deleteRoom = async (roomId: string, ownerId: string) => {
     setIsLoading(true);
-    console.log("ownerId ", ownerId);
     try {
       const response = await fetch("/api/rooms", {
         method: "DELETE",
