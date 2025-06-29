@@ -35,7 +35,7 @@ export default function RoomInfoForm({
 }: RoomInfoFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: room?.name || "",
+    name: room?.name || "UNKNOWN",
     description: room?.description || "",
     roomType: room?.roomType || "collab",
     isPublic: room?.isPublic || false,
@@ -86,7 +86,7 @@ export default function RoomInfoForm({
 
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/rooms/${roomId}/settings`, {
+      const response = await fetch(`/api/rooms/${roomId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

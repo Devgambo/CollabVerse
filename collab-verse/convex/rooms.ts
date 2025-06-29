@@ -46,8 +46,39 @@ export const getRooms = query({
   },
 });
 
+export const getRoomUsers = query({
+  args: {
+    roomId: v.string(),
+  },
+
+  handler: async (ctx, args) => {
+    // Get all roomUsers for the room
+    const roomUsers = await ctx.db
+      .query("roomUsers")
+      .filter((room) => room.eq(room.field("roomId"), args.roomId))
+      .collect();
+
+    const users = await Promise.all(
+      roomUsers.map(async (roomUser) => {
+        const user = await ctx.db
+          .query("users")
+          .filter((u) => u.eq(u.field("userId"), roomUser.userId))
+          .first();
+
+        return {
+          ...roomUser,
+          user: user ? { name: user.username, email: user.email } : null,
+        };
+      }),
+    );
+
+    return users;
+  },
+});
+
 export const updateRoomInfo = mutation({
   args: {
+    userId: v.string(),
     roomId: v.string(),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -62,10 +93,11 @@ export const updateRoomInfo = mutation({
     const room = await ctx.db.get(roomId);
     if (!room) return { success: false, error: "Room not found" };
 
-    // Security check: only owner can modify
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || room.ownerId !== identity.tokenIdentifier) {
-      return { success: false, error: "Unauthorized: Not the room owner" };
+    if (room.ownerId !== args.userId) {
+      return {
+        success: false,
+        error: "Unauthorized ( only room admin can make changes)",
+      };
     }
 
     // Build update object with only provided fields
@@ -78,8 +110,8 @@ export const updateRoomInfo = mutation({
 
     updates.lastAccessed = Date.now();
 
-    await ctx.db.patch(roomId, updates);
-    return { success: true, roomId };
+    const updatedRoom = await ctx.db.patch(roomId, updates);
+    return { success: true, updatedRoom };
   },
 });
 
@@ -291,7 +323,7 @@ export const getRoomData = query({
     return {
       roomId: room._id,
       activeFileId: roomContent?.activeFileId ?? null,
-      whiteboard: [], // you could fetch Liveblocks here if you had a backup
+      whiteboard: [],
       fileSnapshots,
       settings: roomContent?.settings ?? {},
     };

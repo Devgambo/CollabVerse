@@ -27,12 +27,14 @@ import { Separator } from "@/src/components/ui/separator";
 interface UserManagementSectionProps {
   room: any;
   roomId: string;
+  roomUsers: any[] | null;
   onUpdate: (roomId: string) => void;
   onGoToWorkspace: () => void;
 }
 
 export default function UserManagementSection({
   room,
+  roomUsers,
   roomId,
   onUpdate,
   onGoToWorkspace,
@@ -138,25 +140,30 @@ export default function UserManagementSection({
         {/* User List Section */}
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-2">Current Users</h3>
-          {room?.users && room.users.length > 0 ? (
+          {roomUsers && roomUsers.length > 0 ? (
             <div className="space-y-2">
-              {room.users.map((user: any) => (
+              {roomUsers.map((user: any) => (
                 <div
-                  key={user.userId}
+                  key={user._id || user.userId}
                   className="flex items-center justify-between p-2 border rounded-md"
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      {user.userId.substring(0, 2).toUpperCase()}
+                      {user.user?.name
+                        ? user.user.name.charAt(0).toUpperCase()
+                        : (user.userId?.substring(0, 2) || "?").toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-medium">{user.userId}</p>
+                      <p className="font-medium">
+                        {user.user?.name || user.userId || "Unknown User"}
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        {user.role}
+                        {user.role || "No role"}
+                        {user.user?.email && ` • ${user.user.email}`}
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-wrap justify-end">
                     {user.permissions?.map((perm: string) => (
                       <Badge key={perm} variant="secondary">
                         {perm}

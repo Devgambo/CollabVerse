@@ -13,8 +13,9 @@ export default async function RoomLayout({
 }) {
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "");
 
+  const { roomId } = await params;
   const roomData = await convex.query(api.rooms.getRoomData, {
-    roomId: params.roomId,
+    roomId: roomId,
   });
 
   if (!roomData) return notFound();
