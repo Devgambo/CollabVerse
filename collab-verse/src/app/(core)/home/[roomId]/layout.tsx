@@ -21,10 +21,7 @@ export default async function RoomLayout({
   if (!roomData) return notFound();
 
   return (
-    <Providers
-      roomId={params.roomId}
-      roomData={JSON.parse(JSON.stringify(roomData))}
-    >
+    <Providers roomId={roomId} roomData={JSON.parse(JSON.stringify(roomData))}>
       {children}
     </Providers>
   );

@@ -2,7 +2,13 @@
 
 import { getYjsProviderForRoom } from "@liveblocks/yjs";
 import { useRoom } from "@liveblocks/react/suspense";
-import { useCallback, useEffect, useState, Dispatch, SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { Editor } from "@monaco-editor/react";
 import { editor } from "monaco-editor";
 import { MonacoBinding } from "y-monaco";
@@ -17,16 +23,26 @@ type CollaborativeEditorProps = {
   setLeftSide: Dispatch<SetStateAction<boolean>>;
   setRightSide: Dispatch<SetStateAction<boolean>>;
   file: any;
+  permissions: string[];
 };
 
-export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRightSide, file }: CollaborativeEditorProps) {
+export function CollaborativeEditor({
+  leftSide,
+  rightSide,
+  setLeftSide,
+  setRightSide,
+  file,
+  permissions,
+}: CollaborativeEditorProps) {
   const room = useRoom();
   const provider = getYjsProviderForRoom(room);
   const [editorRef, setEditorRef] = useState<editor.IStandaloneCodeEditor>();
-
+  const [isWrite, setIsWrite] = useState<boolean>(false);
   const [codeLanguage, setCodeLanguage] = useState("javascript");
   const [selectedTheme, setSelectedTheme] = useState("vs-dark");
-  const [updatedCode, setUpdatedCode] = useState("//Select a file to start coding..!");
+  const [updatedCode, setUpdatedCode] = useState(
+    "//Select a file to start coding..!",
+  );
   const themes = [
     { name: "Dark", value: "vs-dark" },
     { name: "Light", value: "light" },
@@ -38,7 +54,22 @@ export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRight
     }
   }, [file]);
 
-  const onSelect = (codeLanguage:string) => {
+  useEffect(() => {
+    if (permissions.includes("write")) {
+      setIsWrite(true);
+    } else {
+      setIsWrite(false);
+    }
+
+    // Update editor options when isWrite changes
+    if (editorRef) {
+      editorRef.updateOptions({
+        readOnly: !isWrite,
+      });
+    }
+  }, [permissions, isWrite, editorRef]);
+
+  const onSelect = (codeLanguage: string) => {
     setCodeLanguage(codeLanguage);
   };
 
@@ -50,7 +81,7 @@ export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRight
   const autoSaveFile = async (content: string) => {
     // if (!file?.id || !file?.workspaceId) return;
     try {
-     //TODO: implement autosave
+      //TODO: implement autosave
     } catch (error) {
       console.error("Error auto-saving file:", error);
     }
@@ -77,20 +108,21 @@ export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRight
 
   const handleOnMount = useCallback((e: editor.IStandaloneCodeEditor) => {
     setEditorRef(e);
-    
+
     // Configure editor theme and options after mount
     e.updateOptions({
-      theme: 'vs-dark',
+      theme: "vs-dark",
+      readOnly: !isWrite,
       fontSize: 14,
-      fontFamily: 'JetBrains Mono, Consolas, Monaco, monospace',
+      fontFamily: "JetBrains Mono, Consolas, Monaco, monospace",
       lineHeight: 1.6,
       minimap: { enabled: true },
       scrollBeyondLastLine: false,
-      wordWrap: 'on',
+      wordWrap: "on",
       automaticLayout: true,
       padding: { top: 16, bottom: 16 },
-      renderWhitespace: 'selection',
-      cursorBlinking: 'smooth',
+      renderWhitespace: "selection",
+      cursorBlinking: "smooth",
       cursorSmoothCaretAnimation: "on",
       smoothScrolling: true,
       folding: true,
@@ -111,20 +143,20 @@ export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRight
           <Cursors yProvider={provider} />
         </div>
       )}
-      
+
       {/* Toolbar */}
       <div className="flex-none">
         {editorRef && (
-          <Toolbar 
-            editor={editorRef} 
-            leftSide={leftSide} 
-            rightSide={rightSide} 
-            setLeftSide={setLeftSide} 
-            setRightSide={setRightSide} 
+          <Toolbar
+            editor={editorRef}
+            leftSide={leftSide}
+            rightSide={rightSide}
+            setLeftSide={setLeftSide}
+            setRightSide={setRightSide}
           />
         )}
       </div>
-      
+
       {/* Editor Container */}
       <div className="flex-1 relative bg-[#0d1117] overflow-hidden">
         <Editor
@@ -133,7 +165,10 @@ export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRight
           width="100%"
           theme={selectedTheme}
           language={codeLanguage}
-          defaultValue={CODE_SNIPPETS[codeLanguage as keyof typeof CODE_SNIPPETS] || CODE_SNIPPETS.javascript}
+          defaultValue={
+            CODE_SNIPPETS[codeLanguage as keyof typeof CODE_SNIPPETS] ||
+            CODE_SNIPPETS.javascript
+          }
           value={updatedCode}
           // onMount={onMount}
           onChange={handleEditorChange}
@@ -143,28 +178,28 @@ export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRight
             detectIndentation: true,
             trimAutoWhitespace: true,
             fontSize: 14,
-            fontFamily: 'JetBrains Mono, Consolas, Monaco, monospace',
+            fontFamily: "JetBrains Mono, Consolas, Monaco, monospace",
             lineHeight: 1.6,
-            minimap: { 
+            minimap: {
               enabled: true,
               maxColumn: 80,
               renderCharacters: false,
             },
             scrollBeyondLastLine: false,
-            wordWrap: 'on',
+            wordWrap: "on",
             automaticLayout: true,
-            padding: { 
-              top: 16, 
+            padding: {
+              top: 16,
               bottom: 16,
             },
-            renderWhitespace: 'selection',
-            cursorBlinking: 'smooth',
+            renderWhitespace: "selection",
+            cursorBlinking: "smooth",
             cursorSmoothCaretAnimation: "on",
             smoothScrolling: true,
             folding: true,
             foldingHighlight: true,
-            showFoldingControls: 'always',
-            bracketPairColorization: { 
+            showFoldingControls: "always",
+            bracketPairColorization: {
               enabled: true,
               independentColorPoolPerBracketType: true,
             },
@@ -187,9 +222,9 @@ export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRight
               comments: false,
               strings: false,
             },
-            acceptSuggestionOnEnter: 'on',
+            acceptSuggestionOnEnter: "on",
             acceptSuggestionOnCommitCharacter: true,
-            snippetSuggestions: 'top',
+            snippetSuggestions: "top",
             emptySelectionClipboard: false,
             copyWithSyntaxHighlighting: true,
             useTabStops: true,
@@ -209,19 +244,21 @@ export function CollaborativeEditor({ leftSide, rightSide, setLeftSide, setRight
             codeLens: true,
             contextmenu: true,
             mouseWheelZoom: true,
-            multiCursorModifier: 'ctrlCmd',
-            accessibilitySupport: 'auto',
+            multiCursorModifier: "ctrlCmd",
+            accessibilitySupport: "auto",
             find: {
               cursorMoveOnType: true,
-              seedSearchStringFromSelection: 'always',
-              autoFindInSelection: 'multiline',
+              seedSearchStringFromSelection: "always",
+              autoFindInSelection: "multiline",
             },
           }}
           loading={
             <div className="h-full w-full flex items-center justify-center bg-[#0d1117] text-white">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <p className="text-gray-300 text-sm">Loading Monaco Editor...</p>
+                <p className="text-gray-300 text-sm">
+                  Loading Monaco Editor...
+                </p>
               </div>
             </div>
           }

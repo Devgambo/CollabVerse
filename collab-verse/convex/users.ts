@@ -25,3 +25,23 @@ export const registerUser = mutation({
     }
   },
 });
+
+export const getUserByEmail = query({
+  args: {
+    email: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .first();
+
+    if (!user) return null;
+
+    return {
+      userId: user.userId,
+      username: user.username,
+      email: user.email,
+    };
+  },
+});

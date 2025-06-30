@@ -29,18 +29,10 @@ export default defineSchema({
       v.literal("owner"),
       v.literal("mentor"),
       v.literal("student"),
-      v.literal("collaborator")
+      v.literal("collaborator"),
     ),
     permissions: v.optional(
-      v.array(
-        v.union(
-          v.literal("read"),
-          v.literal("write"),
-          v.literal("execute"),
-          v.literal("delete"),
-          v.literal("invite")
-        )
-      )
+      v.array(v.union(v.literal("read"), v.literal("write"))),
     ),
     lastActiveAt: v.number(),
     joinedAt: v.number(),
@@ -68,7 +60,7 @@ export default defineSchema({
         theme: v.optional(v.string()),
         fontSize: v.optional(v.number()),
         tabSize: v.optional(v.number()),
-      })
+      }),
     ),
     version: v.number(),
     savedAt: v.number(),
@@ -97,6 +89,25 @@ export default defineSchema({
     .index("by_room_type", ["roomId", "type"])
     .index("by_created_by", ["createdBy"]),
 
+  // Add invitations table for handling email invites
+  invitations: defineTable({
+    roomId: v.string(),
+    email: v.string(),
+    role: v.union(
+      v.literal("owner"),
+      v.literal("mentor"),
+      v.literal("student"),
+      v.literal("collaborator"),
+    ),
+    permissions: v.optional(
+      v.array(v.union(v.literal("read"), v.literal("write"))),
+    ),
+    token: v.string(),
+    status: v.string(),
+    createdAt: v.string(),
+    expiresAt: v.string(),
+  }),
+
   executions: defineTable({
     roomId: v.id("rooms"),
     fileId: v.id("filesystem"),
@@ -109,7 +120,7 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("running"),
       v.literal("completed"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     executionTime: v.optional(v.number()),
     createdAt: v.number(),
