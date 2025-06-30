@@ -46,7 +46,7 @@ export async function GET(
     };
 
     const liveblocksRoom = await liveblocks.getOrCreateRoom(roomId, {
-      defaultAccesses: [],
+      defaultAccesses: roomData.isPublic ? ["room:write"] : [],
       metadata: roomMetadata,
       usersAccesses: {
         [roomData.ownerId]: ["room:write"],
@@ -85,7 +85,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const roomId = params.roomId;
+  const { roomId } = await params;
   if (!roomId) {
     console.log(`[${requestId}] Bad request - Missing roomId`);
     return NextResponse.json({ error: "Room ID required" }, { status: 400 });
@@ -146,9 +146,12 @@ export async function PATCH(
                 updatedAt: new Date().toISOString(),
                 updatedBy: user.id,
               },
-              defaultAccesses: updatedRoom.isPublic
-                ? ["room:read", "room:presence:write"]
-                : [],
+              defaultAccesses:
+                updatedRoom.roomType === "mentor"
+                  ? ["room:read", "room:presence:write"]
+                  : updatedRoom.isPublic
+                    ? ["room:write"]
+                    : [],
             });
 
             console.log(
@@ -248,7 +251,6 @@ export async function PATCH(
 
             // Map other users based on their roles/permissions
             roomUsers.forEach((user: any) => {
-              // Skip owner as we already added them
               if (user.userId === room.ownerId) return;
 
               if (user.permissions.includes("write")) {

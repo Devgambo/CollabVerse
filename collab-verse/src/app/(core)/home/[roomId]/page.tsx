@@ -13,52 +13,20 @@ import { Loader2, UserPlus, Settings, Info } from "lucide-react";
 
 import RoomInfoForm from "./components/RoomInfoForm";
 // import EditorSettingsForm from "./components/EditorSettingsForm";
-import UserManagementSection from "./components/UserManagementSection";
+// import UserManagementSection from "./components/UserManagementSection";
 
 export default function RoomSettingsPage() {
   const params = useParams();
-  const router = useRouter();
+  // const router = useRouter();
   const id = params.roomId as string;
   const [room, setRoom] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("room-info");
-  const [roomUsers, setRoomUsers] = useState<any[] | null>([]);
+  // const [roomUsers, setRoomUsers] = useState<any[] | null>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true); // Optional: if you have a loading state
-        await Promise.all([fetchRoomById(id), fetchRoomMembers(id)]);
-      } catch (error) {
-        // Handle error (e.g., set an error state)
-        console.error(error);
-      } finally {
-        setIsLoading(false); // Optional
-      }
-    };
-
-    fetchData();
+    fetchRoomById(id);
   }, [id]);
-
-  const fetchRoomMembers = async (roomId: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/rooms/${roomId}/members`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Correctly access the users array from the response
-      setRoomUsers(data.users || []);
-    } catch (err) {
-      console.error("Error fetching room members:", err);
-      toast.error("Failed to fetch room members");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const fetchRoomById = async (roomId: string) => {
     try {
@@ -100,7 +68,7 @@ export default function RoomSettingsPage() {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="room-info" className="flex items-center gap-2">
             <Info className="w-4 h-4" />
             Room Information
@@ -112,10 +80,11 @@ export default function RoomSettingsPage() {
             <Settings className="w-4 h-4" />
             Editor Settings
           </TabsTrigger> */}
-          <TabsTrigger value="room-users" className="flex items-center gap-2">
+          {/* <TabsTrigger value="room-users" className="flex items-center gap-2">
             <UserPlus className="w-4 h-4" />
             User Management
           </TabsTrigger>
+        */}
         </TabsList>
 
         <TabsContent value="room-info">
@@ -130,7 +99,7 @@ export default function RoomSettingsPage() {
           />
         </TabsContent> */}
 
-        <TabsContent value="room-users">
+        {/* <TabsContent value="room-users">
           <UserManagementSection
             room={room}
             roomUsers={roomUsers}
@@ -138,7 +107,7 @@ export default function RoomSettingsPage() {
             onUpdate={fetchRoomById}
             onGoToWorkspace={() => router.push(`/home/${id}/code`)}
           />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );

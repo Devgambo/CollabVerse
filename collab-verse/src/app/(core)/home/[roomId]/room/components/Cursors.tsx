@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSelf } from "@liveblocks/react/suspense";
 import { AwarenessList, UserAwareness } from "@/src/liveblocks.config";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
-import { generateRandomColor } from "@/src/lib/utils"; // You'll need to create this
+import { generateRandomColor } from "@/src/lib/utils";
 
 type Props = {
   yProvider: LiveblocksYjsProvider;
@@ -12,9 +12,9 @@ type Props = {
 
 export interface User {
   name: string;
-  username: string;
-  email: string;
-  avatar: string;
+  username?: string;
+  email?: string;
+  avatar?: string;
 }
 
 export function Cursors({ yProvider }: Props) {
@@ -23,18 +23,33 @@ export function Cursors({ yProvider }: Props) {
   const [awarenessUsers, setAwarenessUsers] = useState<AwarenessList>([]);
 
   useEffect(() => {
-    // Add user info to Yjs awareness with random color if not provided
+    // Better user name fallback with logging for debugging
+    const userDisplayName =
+      userInfo?.name || userInfo?.username || userInfo?.email || "Anonymous";
+    console.log("Cursor component user info:", { userInfo, userDisplayName });
+
+    const userColor = generateRandomColor();
+
+    // Add user info to Yjs awareness with better metadata
     const localUser: UserAwareness["user"] = {
-      name: userInfo?.name || "Unknown",
-      color: generateRandomColor(),
+      name: userDisplayName,
+      color: userColor,
       avatar: userInfo?.avatar || "",
     };
 
+    // Set user information with debugging
+    console.log("Setting local awareness:", localUser);
     yProvider.awareness.setLocalStateField("user", localUser);
 
-    // On changes, update `awarenessUsers`
+    // On changes, update `awarenessUsers` with better error handling
     function setUsers() {
-      setAwarenessUsers([...yProvider.awareness.getStates()] as AwarenessList);
+      try {
+        const states = [...yProvider.awareness.getStates()] as AwarenessList;
+        console.log("Awareness states updated:", states.length);
+        setAwarenessUsers(states);
+      } catch (error) {
+        console.error("Error updating awareness states:", error);
+      }
     }
 
     yProvider.awareness.on("change", setUsers);
@@ -45,23 +60,30 @@ export function Cursors({ yProvider }: Props) {
     };
   }, [yProvider, userInfo]);
 
-  // Note: We still need to use dangerouslySetInnerHTML here because of how Monaco cursor styling works
-  // This cannot be converted to pure Tailwind as it needs to inject dynamic class names for cursor highlighting
+  // Optimized stylesheet generation with memoization
   const styleSheet = useMemo(() => {
     let cursorStyles = "";
 
     for (const [clientId, client] of awarenessUsers) {
       if (client?.user) {
-        // Add styles for remote selection and cursor
+        // Add styles for remote selection and cursor with improved visibility
         cursorStyles += `
-          .yRemoteSelection-${clientId}, 
-          .yRemoteSelectionHead-${clientId}  {
-            --user-color: ${client.user.color || "#ff0000"};
+          .yRemoteSelection-${clientId} {
+            background-color: ${client.user.color}33; /* 20% opacity */
+          }
+          
+          .yRemoteSelectionHead-${clientId} {
+            position: absolute;
+            border-left: 2px solid ${client.user.color};
+            border-top: 2px solid ${client.user.color};
+            border-bottom: 2px solid ${client.user.color};
+            height: 100%;
+            box-sizing: border-box;
           }
           
           .yRemoteSelectionHead-${clientId}::after {
             content: "${client.user.name || "Anonymous"}";
-            background-color: var(--user-color);
+            background-color: ${client.user.color};
             padding: 2px 6px;
             border-radius: 4px;
             color: white;
@@ -72,6 +94,9 @@ export function Cursors({ yProvider }: Props) {
             white-space: nowrap;
             transform: translateY(-100%);
             opacity: 0.85;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            pointer-events: none;
+            user-select: none;
           }
         `;
       }
@@ -81,4 +106,15 @@ export function Cursors({ yProvider }: Props) {
   }, [awarenessUsers]);
 
   return <style dangerouslySetInnerHTML={styleSheet} />;
+}
+
+// Helper function to generate consistent colors from strings
+function generateColorFromString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 70%, 60%)`;
 }

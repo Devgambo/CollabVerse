@@ -22,7 +22,7 @@ export const createRoom = mutation({
       roomId: roomId,
       userId: args.ownerId,
       role: "owner",
-      permissions: ["read", "write", "delete", "invite"],
+      permissions: ["read", "write"],
       lastActiveAt: Date.now(),
       joinedAt: Date.now(),
     });
@@ -72,7 +72,17 @@ export const getRoomUsers = query({
       }),
     );
 
-    return users;
+    return users.map((roomUser) => ({
+      ...roomUser,
+      _id: roomUser._id.toString(), // Ensure IDs are stringified
+      user: roomUser.user
+        ? {
+            name:
+              roomUser.user.name || roomUser.user.email.split("@")[0] || "User",
+            email: roomUser.user.email,
+          }
+        : null,
+    }));
   },
 });
 
@@ -195,15 +205,7 @@ export const updateRoomUser = mutation({
       ),
     ),
     permissions: v.optional(
-      v.array(
-        v.union(
-          v.literal("read"),
-          v.literal("write"),
-          v.literal("execute"),
-          v.literal("delete"),
-          v.literal("invite"),
-        ),
-      ),
+      v.array(v.union(v.literal("read"), v.literal("write"))),
     ),
   },
   handler: async (ctx, args) => {
@@ -212,11 +214,6 @@ export const updateRoomUser = mutation({
 
     const room = await ctx.db.get(roomId);
     if (!room) return { success: false, error: "Room not found" };
-
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || room.ownerId !== identity.tokenIdentifier) {
-      return { success: false, error: "Unauthorized: Not the room owner" };
-    }
 
     const roomUser = await ctx.db
       .query("roomUsers")
@@ -326,6 +323,83 @@ export const getRoomData = query({
       whiteboard: [],
       fileSnapshots,
       settings: roomContent?.settings ?? {},
+    };
+  },
+});
+
+export const addUserToRoom = mutation({
+  args: {
+    roomId: v.string(),
+    userId: v.string(),
+    role: v.union(
+      v.literal("owner"),
+      v.literal("mentor"),
+      v.literal("student"),
+      v.literal("collaborator"),
+    ),
+    permissions: v.array(v.union(v.literal("read"), v.literal("write"))),
+  },
+
+  handler: async (ctx, args) => {
+    // Check if room exists
+    const room = await ctx.db
+      .query("rooms")
+      .filter((q) => q.eq(q.field("_id"), args.roomId))
+      .first();
+
+    if (!room) {
+      return {
+        success: false,
+        error: "Room not found",
+      };
+    }
+
+    // Check if user already exists in room
+    const existingRoomUser = await ctx.db
+      .query("roomUsers")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("roomId"), args.roomId),
+          q.eq(q.field("userId"), args.userId),
+        ),
+      )
+      .first();
+
+    if (existingRoomUser) {
+      // User already exists, update permissions if needed
+      await ctx.db.patch(existingRoomUser._id, {
+        role: args.role || existingRoomUser.role,
+        permissions: args.permissions,
+      });
+
+      return {
+        success: true,
+        message: "User access updated",
+        roomUserId: existingRoomUser._id,
+      };
+    }
+
+    const normalizedRoomId = ctx.db.normalizeId("rooms", args.roomId);
+    if (!normalizedRoomId) {
+      return {
+        success: false,
+        error: "Invalid room ID",
+      };
+    }
+
+    const roomUserId = await ctx.db.insert("roomUsers", {
+      roomId: normalizedRoomId,
+      userId: args.userId,
+      role: args.role || "viewer",
+      permissions: args.permissions,
+      lastActiveAt: Date.now(),
+      joinedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      message: "User added to room",
+      roomUserId,
     };
   },
 });

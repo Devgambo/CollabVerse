@@ -1,116 +1,87 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { cn } from "@/src/lib/utils";
-import FileSystem from "../components/FileSystem";
-import OutputBox from "../components/OutputBox";
+import { useParams, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useUser } from "@clerk/nextjs";
 
-// Dynamically import CollaborativeEditor with no SSR
 const CollaborativeEditorWithNoSSR = dynamic(
   () =>
-    import("@/src/app/(core)/home/[roomId]/room/components/ColloborativeEditor").then(
-      (mod) => mod.CollaborativeEditor,
-    ),
+    import(
+      "@/src/app/(core)/home/[roomId]/room/components/ColloborativeEditor"
+    ).then((mod) => mod.CollaborativeEditor),
   { ssr: false },
 );
 
-const EditorLoading = () => (
-  <div className="h-full w-full flex items-center justify-center bg-[#1e1e1e] text-white">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-      <p className="text-gray-300">Loading editor...</p>
-    </div>
-  </div>
-);
-
-export default function CodePage() {
+export default function CodeEditorPage() {
+  const params = useParams();
+  const { roomId } = params;
+  const [leftSide, setLeftSide] = useState(true);
+  const [rightSide, setRightSide] = useState(true);
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const [leftSide, setLeftSide] = useState<boolean>(false);
-  const [rightSide, setRightSide] = useState<boolean>(false);
+  const { user, isSignedIn, isLoaded } = useUser();
 
-  return (
-    <div className="h-screen w-full bg-[#0d1117] text-white overflow-hidden flex flex-col">
-      {/* Navbar with padding */}
-      <div className="flex-none pt-4 pb-2 px-4 bg-[#0d1117] border-b border-gray-800/50">
-        <div className="flex justify-center">
-          {/* Your existing Navbar component will be rendered here */}
-          <div className="bg-[#1c2128] rounded-lg px-2 py-1 border border-gray-700/50 shadow-lg">
-            {/* This is where your Navbar component renders */}
-          </div>
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!isLoaded || !isSignedIn) return;
+
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/rooms/${roomId}/access`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+
+        const data = await response.json();
+        console.log(data);
+
+        if (!response.ok) {
+          toast.error(data.error || "You don't have access to this room");
+          router.push(`/home/${roomId}/join`);
+          return;
+        }
+
+        setPermissions(data.permissions || []);
+        setIsLoading(false);
+      } catch (error) {
+        toast.error("Failed to verify room access");
+        router.push("/home");
+      }
+    };
+
+    checkAccess();
+  }, [roomId, router, isLoaded, isSignedIn]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0d1117]">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+          <p className="text-gray-400">Verifying access...</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Main content area */}
-      <div className="flex-1 flex min-h-0">
-        {/* Left Sidebar */}
-        <div
-          className={cn(
-            "bg-[#161b22] border-r border-gray-700/50 transition-all duration-300 ease-in-out flex-shrink-0",
-            leftSide ? "w-[20%] min-w-[250px]" : "w-0"
-          )}
-        >
-          <div
-            className={cn(
-              "h-full overflow-hidden transition-opacity duration-300",
-              leftSide ? "opacity-100" : "opacity-0"
-            )}
-          >
-            {leftSide && (
-              <div className="p-4 h-full">
-                <div className="mb-3">
-                  <h3 className="text-sm font-medium text-gray-300 mb-2">File Explorer</h3>
-                  <div className="h-px bg-gray-700/50"></div>
-                </div>
-                <div className="h-[calc(100%-2rem)] overflow-y-auto">
-                  <FileSystem />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Editor Container */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
-          {/* Editor */}
-          <div className="flex-1 relative overflow-hidden">
-            <CollaborativeEditorWithNoSSR
-              leftSide={leftSide}
-              rightSide={rightSide}
-              setLeftSide={setLeftSide}
-              setRightSide={setRightSide}
-              file={'whatever-is-selected'}
-            />
-          </div>
-        </div>
-
-        {/* Right Sidebar */}
-        <div
-          className={cn(
-            "bg-[#161b22] border-l border-gray-700/50 transition-all duration-300 ease-in-out flex-shrink-0",
-            rightSide ? "w-[20%] min-w-[300px]" : "w-0"
-          )}
-        >
-          <div
-            className={cn(
-              "h-full overflow-hidden transition-opacity duration-300",
-              rightSide ? "opacity-100" : "opacity-0"
-            )}
-          >
-            {rightSide && (
-              <div className="p-4 h-full">
-                <div className="mb-3">
-                  <h3 className="text-sm font-medium text-gray-300 mb-2">Output</h3>
-                  <div className="h-px bg-gray-700/50"></div>
-                </div>
-                <div className="h-[calc(100%-2rem)] overflow-y-auto">
-                  <OutputBox />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+  return (
+    <div className="flex flex-col h-screen">
+      {/* Your navbar would be here */}
+      <div className="flex-1 relative">
+        {" "}
+        {/* This will take remaining height */}
+        <CollaborativeEditorWithNoSSR
+          leftSide={leftSide}
+          rightSide={rightSide}
+          setLeftSide={setLeftSide}
+          setRightSide={setRightSide}
+          file={{}}
+          permissions={permissions}
+        />
       </div>
     </div>
   );
