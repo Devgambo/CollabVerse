@@ -43,12 +43,12 @@ export default function Navbar({ roomId }: NavbarProps) {
 
   return (
     <>
-      <nav className="w-[25%] absolute right-[35%] -top-0.5 z-50">
+      <nav className="w-[25%] absolute right-[35%] -top-8 z-50">
         <TooltipProvider>
-          <div className="shadow-xl backdrop-blur-sm">
+          <div className="shadow-xl">
             <Dock
               direction="middle"
-              className="border-[1px] border-gray-950 absolute bg-gray-800/50"
+              className="border-[1px] border-gray-950 backdrop-blur-md bg-gray-800/50"
             >
               <DockIcon>
                 <Tooltip>

@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, MessageCircleDashedIcon, Text } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
+import ChatBox from "../components/ChatBox";
 
 const CollaborativeEditorWithNoSSR = dynamic(
   () =>
@@ -24,11 +25,17 @@ export default function CodeEditorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { user, isSignedIn, isLoaded } = useUser();
+  const [chatOpen, setChatOpen] = useState<boolean>(false);
+
+  //TODO:fetching the messages with respect to the room-id
+
+
 
   useEffect(() => {
     const checkAccess = async () => {
       if (!isLoaded || !isSignedIn) return;
 
+      console.log("chat---->",chatOpen);
       try {
         setIsLoading(true);
         const response = await fetch(`/api/rooms/${roomId}/access`, {
@@ -55,7 +62,7 @@ export default function CodeEditorPage() {
     };
 
     checkAccess();
-  }, [roomId, router, isLoaded, isSignedIn]);
+  }, [roomId, router, isLoaded, isSignedIn, setChatOpen]);
 
   if (isLoading) {
     return (
@@ -83,6 +90,22 @@ export default function CodeEditorPage() {
           permissions={permissions}
         />
       </div>
+
+      {!chatOpen && (
+        <button
+        onClick={()=>{
+          setChatOpen(prev=>!prev)
+        }}
+         className="h-12 w-15 z-50 absolute bottom-15 right-20">
+          <MessageCircleDashedIcon className="size-10 text-purple-700"/>
+        </button>
+      )}
+      {chatOpen && (
+        <div className="absolute w-[500px] right-30 bottom-2 animate-bounce">
+          <ChatBox roomId={roomId} setChatOpen={setChatOpen}
+          />
+        </div>
+      )}
     </div>
   );
 }

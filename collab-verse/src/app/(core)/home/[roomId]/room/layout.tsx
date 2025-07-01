@@ -1,5 +1,4 @@
 import Navbar from "./components/Navbar";
-
 export default async function RootLayout({
   children,
   params,
@@ -8,6 +7,7 @@ export default async function RootLayout({
   params: { roomId: string };
 }>) {
   const { roomId } = await params;
+
   return (
     <div>
       <div className=" ">
