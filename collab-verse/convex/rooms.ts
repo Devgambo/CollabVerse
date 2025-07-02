@@ -305,17 +305,21 @@ export const getRoomData = query({
       .withIndex("by_room", (q) => q.eq("roomId", roomId))
       .first();
 
+    //TODO: whose parent is null
     const files = await ctx.db
       .query("filesystem")
       .withIndex("by_room", (q) => q.eq("roomId", roomId))
       .collect();
 
+
+    //Store content in fileSnapshot...
+    //FIX
     const fileSnapshots: Record<string, string> = {};
-    for (const file of files) {
-      if (file.type === "file" && file.lastSyncedContent) {
-        fileSnapshots[file._id] = file.lastSyncedContent;
-      }
-    }
+    // for (const file of files) {
+    //   if (file.type === "file" && file.lastSyncedContent) {
+    //     fileSnapshots[file._id] = file.lastSyncedContent;
+    //   }
+    // }
 
     return {
       roomId: room._id,

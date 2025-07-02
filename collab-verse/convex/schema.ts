@@ -51,9 +51,11 @@ export default defineSchema({
     editedAt: v.optional(v.number()),
   }).index("by_room", ["roomId"]),
 
+
   roomContent: defineTable({
     roomId: v.id("rooms"),
-    liveblockWhiteboardId: v.optional(v.string()), // e.g. "room:<roomId>:whiteboard"
+    //?????
+    liveblockWhiteboardId: v.optional(v.string()), // e.g. "room:<roomId>:whiteboard"   ??
     activeFileId: v.optional(v.id("filesystem")),
     settings: v.optional(
       v.object({
@@ -62,10 +64,11 @@ export default defineSchema({
         tabSize: v.optional(v.number()),
       }),
     ),
-    version: v.number(),
+    version: v.number(),    //inc after every save (1,2,3,...)
     savedAt: v.number(),
     autoSaveEnabled: v.optional(v.boolean()),
   }).index("by_room", ["roomId"]),
+
 
   filesystem: defineTable({
     name: v.string(),
@@ -73,21 +76,34 @@ export default defineSchema({
     roomId: v.id("rooms"),
     parentId: v.optional(v.id("filesystem")), // null for root
     extension: v.optional(v.string()),
-    isExecutable: v.optional(v.boolean()),
-    isReadOnly: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
     createdBy: v.string(),
     lastModifiedBy: v.optional(v.string()),
-
-    // Optional snapshot of content (can be used during autosave)
-    lastSyncedContent: v.optional(v.string()),
   })
     .index("by_room", ["roomId"])
     .index("by_parent", ["parentId"])
     .index("by_room_parent", ["roomId", "parentId"])
     .index("by_room_type", ["roomId", "type"])
     .index("by_created_by", ["createdBy"]),
+
+
+
+  fileContent: defineTable({
+    fileId: v.id("filesystem"),
+    content: v.optional(v.string()),
+    language: v.optional(v.string()),
+    output: v.optional(v.string()),
+    error: v.optional(v.string()),
+    executionTime: v.optional(v.number()),
+    isExecutable: v.optional(v.boolean()),    //lookintoit
+
+    // lastSyncedContent: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+  .index("by_fileId", ["fileId"]),
+
 
   // Add invitations table for handling email invites
   invitations: defineTable({
@@ -107,27 +123,4 @@ export default defineSchema({
     createdAt: v.string(),
     expiresAt: v.string(),
   }),
-
-  executions: defineTable({
-    roomId: v.id("rooms"),
-    fileId: v.id("filesystem"),
-    userId: v.string(),
-    code: v.string(),
-    language: v.string(),
-    output: v.optional(v.string()),
-    error: v.optional(v.string()),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("running"),
-      v.literal("completed"),
-      v.literal("failed"),
-    ),
-    executionTime: v.optional(v.number()),
-    createdAt: v.number(),
-    completedAt: v.optional(v.number()),
-  })
-    .index("by_room", ["roomId"])
-    .index("by_file", ["fileId"])
-    .index("by_user", ["userId"])
-    .index("by_status", ["status"]),
 });

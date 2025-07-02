@@ -7,7 +7,11 @@ function OutputBox(props: Props) {
 
     return (
         <div className='bg-black'>
-
+            <div>
+                <div>
+                    
+                </div>
+            </div>
         </div>
     )
 }

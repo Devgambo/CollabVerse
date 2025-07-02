@@ -6,8 +6,9 @@ function FileSystem(props: Props) {
     const {} = props
 
     return (
-        <div className='bg-white h-screen'>
-            Side Bar
+        <div className='h-screen'>
+            Side Bar 
+            File tree will come here
         </div>
     )
 }

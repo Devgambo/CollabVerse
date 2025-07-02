@@ -70,6 +70,5 @@ function Hydrator({
       isMounted = false;
     };
   }, [fileSnapshots, room]);
-
   return null;
 }
