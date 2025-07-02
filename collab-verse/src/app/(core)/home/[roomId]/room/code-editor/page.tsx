@@ -35,6 +35,11 @@ export default function CodeEditorPage() {
   const { user, isSignedIn, isLoaded } = useUser();
   const [chatOpen, setChatOpen] = useState<boolean>(false);
 
+  //TODO : change the type accordingly and also handle the null values
+
+  const [fileId, setFileId] = useState<string>("");
+  const [fileContent, setFileContent] = useState<string>();
+
   //TODO:fetching the messages with respect to the room-id
 
   useEffect(() => {
@@ -96,6 +101,7 @@ export default function CodeEditorPage() {
               leftSide ? "opacity-100" : "opacity-0",
             )}
           >
+            {/* File Tree Component */}
             {leftSide && (
               <div className="p-4 h-full">
                 <div className="mb-3">
@@ -105,7 +111,10 @@ export default function CodeEditorPage() {
                   <div className="h-px bg-gray-700/50"></div>
                 </div>
                 <div className="h-[calc(100%-2rem)] overflow-y-auto">
-                  <FileSystem />
+                  <FileSystem
+                    activeFileId={fileId}
+                    setActiveFileId={setFileId}
+                  />
                 </div>
               </div>
             )}
@@ -121,7 +130,7 @@ export default function CodeEditorPage() {
               rightSide={rightSide}
               setLeftSide={setLeftSide}
               setRightSide={setRightSide}
-              file={{}}
+              file={{}} // use FileId here and fetch the file ( OR USEMEMO IN PAGE.TSX AND TRANSFER THE CONTENT ). CHeck which is the bset choice and apply it
               permissions={permissions}
             />
           </div>

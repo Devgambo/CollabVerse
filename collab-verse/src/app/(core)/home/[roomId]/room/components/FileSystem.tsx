@@ -1,62 +1,228 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import SampleFileSystem from "@/public/file_sys.json";
 import { File, Folder, Tree } from "@/src/components/magicui/file-tree";
-import {
-  PlusCircle,
-  FolderPlus,
-  Trash2,
-  Edit2,
-  MoreVertical,
-  FileText,
-} from "lucide-react";
+import { PlusCircle, FolderPlus, Trash2, Edit2, FileText } from "lucide-react";
+import { TooltipProvider } from "@/src/components/ui/tooltip";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/src/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu";
 
-interface Props {}
+interface Props {
+  activeFileId: string;
+  setActiveFileId: (fileId: string) => void;
+}
 
-function FileSystem(props: Props) {
-  const {} = props;
-  const [activeFile, setActiveFile] = useState<String>();
-  const [createFile, setCreateFile] = useState<String>();
-  const [createFolder, setCreateFolder] = useState<String>();
-  const [deleteFileOrFolder, setDeleteFileOrFolder] = useState<String>();
-  const [renameItem, setRenameItem] = useState<String>();
+interface FileWithActionsProps {
+  file: any;
+  onClick: React.MouseEventHandler;
+  onRename: (fileId: string) => void;
+  onDelete: (fileId: string) => void;
+}
 
-  useEffect(() => {
-    const handleActiveFIle = (fileId: String) => {
-      setActiveFile(fileId);
-    };
-  }, [activeFile]);
+interface FolderWithActionsProps {
+  file: any;
+  children: React.ReactNode;
+  onCreateFile: (parentId: string) => void;
+  onCreateFolder: (parentId: string) => void;
+  onRename: (fileId: string) => void;
+  onDelete: (fileId: string) => void;
+}
 
-  const handleCreateFile = async (parentId: String) => {
+// File component with hover actions
+const FileWithActions = ({
+  file,
+  onClick,
+  onRename,
+  onDelete,
+}: FileWithActionsProps) => {
+  return (
+    <div className="flex items-center group" onClick={onClick}>
+      <div className="flex-grow flex items-center">
+        <File
+          value={file._id}
+          className="hover:bg-slate-800/60 py-0.5 pl-0.5 pr-2 rounded-md"
+        >
+          {file.name}
+        </File>
+      </div>
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity -ml-16 pl-6 pr-1 bg-gradient-to-r from-transparent via-slate-900/80 to-slate-900/90">
+        <button
+          className="p-1 hover:bg-slate-800 rounded-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRename(file._id);
+          }}
+        >
+          <Edit2 className="h-3.5 w-3.5 text-blue-400" />
+        </button>
+        <button
+          className="p-1 hover:bg-slate-800 rounded-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(file._id);
+          }}
+        >
+          <Trash2 className="h-3.5 w-3.5 text-red-400" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Folder component with inline actions instead of dropdown
+const FolderWithActions = ({
+  file,
+  children,
+  onCreateFile,
+  onCreateFolder,
+  onRename,
+  onDelete,
+}: FolderWithActionsProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Folder
+        value={file._id}
+        element={
+          <div className="flex items-center w-full">
+            <span className="mr-auto">{file.name}</span>
+            {isHovered && (
+              <div className="flex items-center gap-1 ml-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="p-1 hover:bg-slate-700/60 rounded-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCreateFile(file._id);
+                        }}
+                      >
+                        <FileText className="h-3.5 w-3.5 text-green-400" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-slate-800 text-white border-slate-700"
+                    >
+                      New File
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="p-1 hover:bg-slate-700/60 rounded-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCreateFolder(file._id);
+                        }}
+                      >
+                        <FolderPlus className="h-3.5 w-3.5 text-blue-400" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-slate-800 text-white border-slate-700"
+                    >
+                      New Folder
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="p-1 hover:bg-slate-700/60 rounded-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRename(file._id);
+                        }}
+                      >
+                        <Edit2 className="h-3.5 w-3.5 text-yellow-400" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-slate-800 text-white border-slate-700"
+                    >
+                      Rename
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="p-1 hover:bg-slate-700/60 rounded-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(file._id);
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-slate-800 text-white border-slate-700"
+                    >
+                      Delete
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
+          </div>
+        }
+      >
+        {children}
+      </Folder>
+    </div>
+  );
+};
+
+export default function FileSystem(props: Props) {
+  const { activeFileId, setActiveFileId } = props;
+  const [createFile, setCreateFile] = useState<string>();
+  const [createFolder, setCreateFolder] = useState<string>();
+  const [deleteFileOrFolder, setDeleteFileOrFolder] = useState<string>();
+  const [renameItem, setRenameItem] = useState<string>();
+
+  const handleCreateFile = async (parentId: string) => {
     setCreateFile(parentId);
     console.log("Creating file in parent:", parentId);
   };
 
-  const handleCreateFolder = async (parentId: String) => {
+  const handleCreateFolder = async (parentId: string) => {
     setCreateFolder(parentId);
     console.log("Creating folder in parent:", parentId);
   };
 
-  const handleDeleteFolderOrFile = async (fileId: String) => {
+  const handleDeleteFolderOrFile = async (fileId: string) => {
     setDeleteFileOrFolder(fileId);
     console.log("Deleting item:", fileId);
   };
 
-  const handleRenameFile = async (fileId: String) => {
-    // New function stub for rename
+  const handleRenameFile = async (fileId: string) => {
     setRenameItem(fileId);
     console.log("Renaming item:", fileId);
+  };
+
+  const handleFileClick = (fileId: string) => {
+    setActiveFileId(fileId);
+    console.log("File clicked:", fileId);
   };
 
   const getFileWithParentId = (parentId: string) => {
@@ -66,114 +232,30 @@ function FileSystem(props: Props) {
       return null;
     }
 
-    return files.map((file) => (
-      <div key={file._id} className="group relative">
-        {file.type !== "folder" && (
-          <div className="flex items-center group">
-            <File value={file._id}>{file.name}</File>
+    const groupFiles = [
+      ...files.filter((file) => file.type === "folder"),
+      ...files.filter((file) => file.type !== "folder"),
+    ];
 
-            {/* File actions */}
-            <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <TooltipProvider>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="focus:outline-none p-1 rounded-sm hover:bg-slate-700/60">
-                      <MoreVertical className="h-3.5 w-3.5 text-slate-400" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="bg-slate-800 border-slate-700 text-slate-200"
-                  >
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRenameFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
-                    >
-                      <Edit2 className="h-3.5 w-3.5 text-blue-400" /> Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFolderOrFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer text-red-400"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TooltipProvider>
-            </div>
-          </div>
-        )}
-
-        {file.type === "folder" && (
-          <div className="flex items-center group">
-            <div className="flex-grow">
-              <Folder value={file._id} element={file.name}>
-                {getFileWithParentId(file._id)}
-              </Folder>
-            </div>
-
-            {/* Folder actions */}
-            <div className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
-              <TooltipProvider>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="focus:outline-none p-1 rounded-sm hover:bg-slate-700/60">
-                      <MoreVertical className="h-3.5 w-3.5 text-slate-400" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="bg-slate-800 border-slate-700 text-slate-200"
-                  >
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCreateFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
-                    >
-                      <FileText className="h-3.5 w-3.5 text-green-400" /> New
-                      File
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCreateFolder(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
-                    >
-                      <FolderPlus className="h-3.5 w-3.5 text-blue-400" /> New
-                      Folder
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRenameFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
-                    >
-                      <Edit2 className="h-3.5 w-3.5 text-yellow-400" /> Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFolderOrFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer text-red-400"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TooltipProvider>
-            </div>
-          </div>
+    return groupFiles.map((file) => (
+      <div key={file._id}>
+        {file.type !== "folder" ? (
+          <FileWithActions
+            file={file}
+            onClick={() => handleFileClick(file._id)}
+            onRename={handleRenameFile}
+            onDelete={handleDeleteFolderOrFile}
+          />
+        ) : (
+          <FolderWithActions
+            file={file}
+            onCreateFile={handleCreateFile}
+            onCreateFolder={handleCreateFolder}
+            onRename={handleRenameFile}
+            onDelete={handleDeleteFolderOrFile}
+          >
+            {getFileWithParentId(file._id)}
+          </FolderWithActions>
         )}
       </div>
     ));
@@ -182,113 +264,30 @@ function FileSystem(props: Props) {
   const getRoomFiles = () => {
     const rootItems = SampleFileSystem.filter((file) => file.parentId === null);
 
-    return rootItems.map((file) => (
-      <div key={file._id} className="group relative">
-        {file.type !== "folder" && (
-          <div className="flex items-center group">
-            <File value={file._id}>{file.name}</File>
-
-            {/* File actions - same as above for root files */}
-            <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <TooltipProvider>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="focus:outline-none p-1 rounded-sm hover:bg-slate-700/60">
-                      <MoreVertical className="h-3.5 w-3.5 text-slate-400" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="bg-slate-800 border-slate-700 text-slate-200"
-                  >
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRenameFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
-                    >
-                      <Edit2 className="h-3.5 w-3.5 text-blue-400" /> Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFolderOrFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer text-red-400"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TooltipProvider>
-            </div>
-          </div>
-        )}
-
-        {file.type === "folder" && (
-          <div className="flex items-center group">
-            <div className="flex-grow">
-              <Folder value={file._id} element={file.name}>
-                {getFileWithParentId(file._id)}
-              </Folder>
-            </div>
-
-            <div className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
-              <TooltipProvider>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="focus:outline-none p-1 rounded-sm hover:bg-slate-700/60">
-                      <MoreVertical className="h-3.5 w-3.5 text-slate-400" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="bg-slate-800 border-slate-700 text-slate-200"
-                  >
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCreateFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
-                    >
-                      <FileText className="h-3.5 w-3.5 text-green-400" /> New
-                      File
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCreateFolder(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
-                    >
-                      <FolderPlus className="h-3.5 w-3.5 text-blue-400" /> New
-                      Folder
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRenameFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
-                    >
-                      <Edit2 className="h-3.5 w-3.5 text-yellow-400" /> Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFolderOrFile(file._id);
-                      }}
-                      className="flex items-center gap-2 hover:bg-slate-700 focus:bg-slate-700 cursor-pointer text-red-400"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TooltipProvider>
-            </div>
-          </div>
+    // Arrage by file type like vs code
+    const groupFiles = [
+      ...rootItems.filter((file) => file.type === "folder"),
+      ...rootItems.filter((file) => file.type !== "folder"),
+    ];
+    return groupFiles.map((file) => (
+      <div key={file._id}>
+        {file.type !== "folder" ? (
+          <FileWithActions
+            file={file}
+            onClick={() => handleFileClick(file._id)}
+            onRename={handleRenameFile}
+            onDelete={handleDeleteFolderOrFile}
+          />
+        ) : (
+          <FolderWithActions
+            file={file}
+            onCreateFile={handleCreateFile}
+            onCreateFolder={handleCreateFolder}
+            onRename={handleRenameFile}
+            onDelete={handleDeleteFolderOrFile}
+          >
+            {getFileWithParentId(file._id)}
+          </FolderWithActions>
         )}
       </div>
     ));
@@ -326,5 +325,3 @@ function FileSystem(props: Props) {
     </div>
   );
 }
-
-export default FileSystem;

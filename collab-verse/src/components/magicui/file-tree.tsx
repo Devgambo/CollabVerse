@@ -206,7 +206,7 @@ interface FolderComponentProps
 
 type FolderProps = {
   expandedItems?: string[];
-  element: string;
+  element: any;
   isSelectable?: boolean;
   isSelect?: boolean;
 } & FolderComponentProps;
@@ -259,7 +259,7 @@ const Folder = forwardRef<
           {expandedItems?.includes(value)
             ? (openIcon ?? <FolderOpenIcon className="size-4" />)
             : (closeIcon ?? <FolderIcon className="size-4" />)}
-          <span>{element}</span>
+          <div>{element}</div>
         </AccordionPrimitive.Trigger>
         <AccordionPrimitive.Content className="relative h-full overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           {element && indicator && <TreeIndicator aria-hidden="true" />}
