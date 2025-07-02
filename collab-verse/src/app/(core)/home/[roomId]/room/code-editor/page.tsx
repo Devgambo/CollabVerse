@@ -3,7 +3,12 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, MessageCircleDashedIcon, MessageCircleIcon, Text } from "lucide-react";
+import {
+  Loader2,
+  MessageCircleDashedIcon,
+  MessageCircleIcon,
+  Text,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import ChatBox from "../components/ChatBox";
@@ -75,26 +80,28 @@ export default function CodeEditorPage() {
   }
 
   return (
-      <div className="h-screen w-full bg-[#0d1117] text-white overflow-hidden flex flex-col">
+    <div className="h-screen w-full bg-[#0d1117] text-white overflow-hidden flex flex-col">
       {/* Main content area */}
       <div className="flex-1 flex min-h-0">
         {/* Left Sidebar */}
         <div
           className={cn(
             "bg-[#161b22] border-r border-gray-700/50 transition-all duration-300 ease-in-out flex-shrink-0",
-            leftSide ? "w-[20%] min-w-[250px]" : "w-0"
+            leftSide ? "w-[20%] min-w-[250px]" : "w-0",
           )}
         >
           <div
             className={cn(
               "h-full overflow-hidden transition-opacity duration-300",
-              leftSide ? "opacity-100" : "opacity-0"
+              leftSide ? "opacity-100" : "opacity-0",
             )}
           >
             {leftSide && (
               <div className="p-4 h-full">
                 <div className="mb-3">
-                  <h3 className="text-sm font-medium text-gray-300 mb-2">File Explorer</h3>
+                  <h3 className="text-sm font-medium text-gray-300 mb-2">
+                    File Explorer
+                  </h3>
                   <div className="h-px bg-gray-700/50"></div>
                 </div>
                 <div className="h-[calc(100%-2rem)] overflow-y-auto">
@@ -109,13 +116,13 @@ export default function CodeEditorPage() {
         <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117]">
           {/* Editor */}
           <div className="flex-1 relative overflow-hidden">
-          <CollaborativeEditorWithNoSSR
-            leftSide={leftSide}
-            rightSide={rightSide}
-            setLeftSide={setLeftSide}
-            setRightSide={setRightSide}
-            file={{}}
-            permissions={permissions}
+            <CollaborativeEditorWithNoSSR
+              leftSide={leftSide}
+              rightSide={rightSide}
+              setLeftSide={setLeftSide}
+              setRightSide={setRightSide}
+              file={{}}
+              permissions={permissions}
             />
           </div>
         </div>
@@ -124,19 +131,21 @@ export default function CodeEditorPage() {
         <div
           className={cn(
             "bg-[#161b22] border-l border-gray-700/50 transition-all duration-300 ease-in-out flex-shrink-0",
-            rightSide ? "w-[20%] min-w-[300px]" : "w-0"
+            rightSide ? "w-[20%] min-w-[300px]" : "w-0",
           )}
         >
           <div
             className={cn(
               "h-full overflow-hidden transition-opacity duration-300",
-              rightSide ? "opacity-100" : "opacity-0"
+              rightSide ? "opacity-100" : "opacity-0",
             )}
           >
             {rightSide && (
               <div className="p-4 h-full">
                 <div className="mb-3">
-                  <h3 className="text-sm font-medium text-gray-300 mb-2">Output</h3>
+                  <h3 className="text-sm font-medium text-gray-300 mb-2">
+                    Output
+                  </h3>
                   <div className="h-px bg-gray-700/50"></div>
                 </div>
                 <div className="h-[calc(100%-2rem)] overflow-y-auto">
@@ -149,31 +158,28 @@ export default function CodeEditorPage() {
 
         {/* chat vala dabba*/}
         <div>
-        {!chatOpen && (
-        <button
-          onClick={()=>{
-            setChatOpen(prev=>!prev)
-        }}
-        className="h-12 w-15 z-50 absolute bottom-15 right-20">
-          <div className="border rounded-4xl border-dashed p-2 flex gap-2 border-purple-950 bg-gray-700 animate-bounce justify-center items-center align-middle">
-          <span className="font-bold text-xl bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-            chat
-          </span>
-          </div>
-        </button>
-        )}
-        {chatOpen && (
-          <div className="absolute w-[500px] right-30 bottom-2 z-50">
-            <ChatBox roomId={roomId} setChatOpen={setChatOpen}
-            />
-          </div>
-        )}
+          {!chatOpen && (
+            <button
+              onClick={() => {
+                setChatOpen((prev) => !prev);
+              }}
+              className="h-12 w-15 z-50 absolute bottom-15 right-20"
+            >
+              <div className="group relative">
+                <div className="absolute -inset-1 animate-pulse rounded-full bg-gradient-to-r from-blue-600 to-purple-600 opacity-75 blur-md transition duration-1000 group-hover:opacity-100 group-hover:duration-200"></div>
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[#161b22] ring-1 ring-gray-700/50">
+                  <MessageCircleIcon className="h-7 w-7 text-gray-400 transition-colors group-hover:text-white" />
+                </div>
+              </div>
+            </button>
+          )}
+          {chatOpen && (
+            <div className="absolute w-[500px] right-30 bottom-2 z-50">
+              <ChatBox roomId={roomId} setChatOpen={setChatOpen} />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
