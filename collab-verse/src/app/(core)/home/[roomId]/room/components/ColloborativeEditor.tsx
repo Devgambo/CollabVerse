@@ -22,7 +22,7 @@ type CollaborativeEditorProps = {
   rightSide: boolean;
   setLeftSide: Dispatch<SetStateAction<boolean>>;
   setRightSide: Dispatch<SetStateAction<boolean>>;
-  file: any;
+  fileId: string;
   permissions: string[];
 };
 
@@ -31,7 +31,7 @@ export function CollaborativeEditor({
   rightSide,
   setLeftSide,
   setRightSide,
-  file,
+  fileId,
   permissions,
 }: CollaborativeEditorProps) {
   const room = useRoom();
@@ -48,12 +48,17 @@ export function CollaborativeEditor({
     { name: "Light", value: "light" },
     { name: "High Contrast", value: "hc-black" },
   ];
+
+  const fetchFileContent = async () => {
+    
+  };
+
   useEffect(() => {
-    if (file) {
+    if (fileId) {
       //file Id --> filecontent and fill content
-      // fetchFileContent();
+      fetchFileContent();
     }
-  }, [file]);
+  }, [fileId]);
 
   useEffect(() => {
     if (permissions.includes("write")) {
