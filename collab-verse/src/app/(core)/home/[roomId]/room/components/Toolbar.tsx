@@ -11,25 +11,31 @@ type Props = {
   setRightSide: Dispatch<SetStateAction<boolean>>;
 };
 
-export function Toolbar({ editor, leftSide, rightSide, setLeftSide, setRightSide }: Props) {
+export function Toolbar({
+  editor,
+  leftSide,
+  rightSide,
+  setLeftSide,
+  setRightSide,
+}: Props) {
   return (
     <div className="flex gap-1 justify-between align-middle items-center bg-[#1c2128] border-b border-gray-700/50 px-3 py-2">
       <div className="flex gap-1">
-        <button 
+        <button
           className={`p-2 rounded-md transition-colors duration-200 ${
-            leftSide 
-              ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30' 
-              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+            leftSide
+              ? "bg-blue-600/20 text-blue-400 hover:bg-blue-600/30"
+              : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
           }`}
           onClick={() => setLeftSide(!leftSide)}
           aria-label="toggle left sidebar"
           type="button"
         >
-          <SidebarIcon className="w-4 h-4"/>
+          <SidebarIcon className="w-4 h-4" />
         </button>
-        
+
         <div className="w-px h-6 bg-gray-600/50 mx-1 my-auto"></div>
-        
+
         <button
           className="p-2 rounded-md hover:bg-gray-700/50 transition-colors duration-200 text-gray-400 hover:text-gray-200"
           onClick={() => editor.trigger("", "undo", null)}
@@ -47,27 +53,31 @@ export function Toolbar({ editor, leftSide, rightSide, setLeftSide, setRightSide
           <RedoIcon />
         </button>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <span className="text-xs text-gray-500">
-          {leftSide && rightSide ? 'Both panels open' : 
-           leftSide ? 'Left panel open' : 
-           rightSide ? 'Right panel open' : 'Full editor'}
+          {leftSide && rightSide
+            ? "Both panels open"
+            : leftSide
+              ? "Left panel open"
+              : rightSide
+                ? "Right panel open"
+                : "Full editor"}
         </span>
-        
+
         <div className="w-px h-6 bg-gray-600/50"></div>
-        
-        <button 
+
+        <button
           className={`p-2 rounded-md transition-colors duration-200 ${
-            rightSide 
-              ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30' 
-              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+            rightSide
+              ? "bg-blue-600/20 text-blue-400 hover:bg-blue-600/30"
+              : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
           }`}
           onClick={() => setRightSide(!rightSide)}
           aria-label="toggle right sidebar"
           type="button"
         >
-          <SidebarClose className="w-4 h-4"/>
+          <SidebarClose className="w-4 h-4" />
         </button>
       </div>
     </div>

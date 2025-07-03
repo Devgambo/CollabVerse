@@ -129,7 +129,9 @@ export default function HomePage() {
   };
 
   const goToCodeEditor = (roomId: string) => {
+    setIsLoading(true);
     router.push(`/home/${roomId}/room/code-editor`);
+    setIsLoading(false);
   };
 
   const deleteRoom = async (roomId: string, ownerId: string) => {

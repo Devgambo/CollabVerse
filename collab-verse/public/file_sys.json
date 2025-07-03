@@ -1,0 +1,144 @@
+[
+  {
+    "_id": "fs_001",
+    "name": "src",
+    "type": "folder",
+    "roomId": "room_123",
+    "parentId": null,
+    "createdAt": 1704067200000,
+    "updatedAt": 1704067200000,
+    "createdBy": "user_abc123"
+  },
+  {
+    "_id": "fs_002",
+    "name": "components",
+    "type": "folder",
+    "roomId": "room_123",
+    "parentId": "fs_001",
+    "createdAt": 1704067260000,
+    "updatedAt": 1704067260000,
+    "createdBy": "user_abc123"
+  },
+  {
+    "_id": "fs_003",
+    "name": "utils",
+    "type": "folder",
+    "roomId": "room_123",
+    "parentId": "fs_001",
+    "createdAt": 1704067320000,
+    "updatedAt": 1704067320000,
+    "createdBy": "user_abc123"
+  },
+  {
+    "_id": "fs_004",
+    "name": "App.tsx",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": "fs_001",
+    "extension": "tsx",
+    "createdAt": 1704067380000,
+    "updatedAt": 1704070980000,
+    "createdBy": "user_abc123",
+    "lastModifiedBy": "user_def456"
+  },
+  {
+    "_id": "fs_005",
+    "name": "index.ts",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": "fs_001",
+    "extension": "ts",
+    "createdAt": 1704067440000,
+    "updatedAt": 1704067440000,
+    "createdBy": "user_abc123"
+  },
+  {
+    "_id": "fs_006",
+    "name": "Header.tsx",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": "fs_002",
+    "extension": "tsx",
+    "createdAt": 1704067500000,
+    "updatedAt": 1704067500000,
+    "createdBy": "user_def456"
+  },
+  {
+    "_id": "fs_007",
+    "name": "Button.tsx",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": "fs_002",
+    "extension": "tsx",
+    "createdAt": 1704067560000,
+    "updatedAt": 1704071040000,
+    "createdBy": "user_abc123",
+    "lastModifiedBy": "user_ghi789"
+  },
+  {
+    "_id": "fs_008",
+    "name": "helpers.ts",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": "fs_003",
+    "extension": "ts",
+    "createdAt": 1704067620000,
+    "updatedAt": 1704067620000,
+    "createdBy": "user_def456"
+  },
+  {
+    "_id": "fs_009",
+    "name": "api.ts",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": "fs_003",
+    "extension": "ts",
+    "createdAt": 1704067680000,
+    "updatedAt": 1704067680000,
+    "createdBy": "user_abc123"
+  },
+  {
+    "_id": "fs_010",
+    "name": "package.json",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": null,
+    "extension": "json",
+    "createdAt": 1704067740000,
+    "updatedAt": 1704067740000,
+    "createdBy": "user_abc123"
+  },
+  {
+    "_id": "fs_011",
+    "name": "README.md",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": null,
+    "extension": "md",
+    "createdAt": 1704067800000,
+    "updatedAt": 1704070800000,
+    "createdBy": "user_abc123",
+    "lastModifiedBy": "user_def456"
+  },
+  {
+    "_id": "fs_012",
+    "name": "styles",
+    "type": "folder",
+    "roomId": "room_123",
+    "parentId": null,
+    "createdAt": 1704067860000,
+    "updatedAt": 1704067860000,
+    "createdBy": "user_def456"
+  },
+  {
+    "_id": "fs_013",
+    "name": "globals.css",
+    "type": "file",
+    "roomId": "room_123",
+    "parentId": "fs_012",
+    "extension": "css",
+    "createdAt": 1704067920000,
+    "updatedAt": 1704067920000,
+    "createdBy": "user_def456"
+  }
+]
