@@ -1,15 +1,21 @@
-import React, { useState } from "react";
-import SampleFileSystem from "@/public/file_sys.json";
+'use client'
+
+import React, { useEffect, useState } from "react";
 import { File, Folder, Tree } from "@/src/components/magicui/file-tree";
-import { PlusCircle, FolderPlus, Trash2, Edit2, FileText } from "lucide-react";
+import { PlusCircle, FolderPlus, Trash2, Edit2, FileText, Check, X } from "lucide-react";
 import { TooltipProvider } from "@/src/components/ui/tooltip";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/src/components/ui/tooltip";
+import { ParamValue } from "next/dist/server/request/params";
+import { useUser } from "@clerk/nextjs";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface Props {
+  roomId: ParamValue;
   activeFileId: string;
   setActiveFileId: (fileId: string) => void;
 }
@@ -19,6 +25,9 @@ interface FileWithActionsProps {
   onClick: React.MouseEventHandler;
   onRename: (fileId: string) => void;
   onDelete: (fileId: string) => void;
+  isRenaming: boolean;
+  onRenameComplete: (fileId: string, newName: string) => void;
+  onRenameCancel: () => void;
 }
 
 interface FolderWithActionsProps {
@@ -28,7 +37,22 @@ interface FolderWithActionsProps {
   onCreateFolder: (parentId: string) => void;
   onRename: (fileId: string) => void;
   onDelete: (fileId: string) => void;
+  isRenaming: boolean;
+  onRenameComplete: (fileId: string, newName: string) => void;
+  onRenameCancel: () => void;
 }
+
+export type FileSample = {
+  _id: string;
+  name: string;
+  type: "folder" | "file";
+  roomId: string;
+  parentId: string | null;
+  createdAt: number;
+  updatedAt: number;
+  createdBy: string;
+};
+
 
 // File component with hover actions
 const FileWithActions = ({
@@ -36,7 +60,50 @@ const FileWithActions = ({
   onClick,
   onRename,
   onDelete,
+  isRenaming,
+  onRenameComplete,
+  onRenameCancel,
 }: FileWithActionsProps) => {
+  const [renameValue, setRenameValue] = useState(file.name);
+  const handleRenameSubmit = () => {
+    if (renameValue.trim()) {
+      onRenameComplete(file._id, renameValue.trim());
+    }
+  };
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit();
+    } else if (e.key === 'Escape') {
+      onRenameCancel();
+    }
+  };
+  if (isRenaming) {
+    return (
+      <div className="flex items-center gap-1 py-0.5 pl-0.5 pr-2">
+        <input
+          type="text"
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="flex-1 bg-slate-800 text-white px-2 py-1 rounded text-sm border border-slate-600 focus:border-blue-400 focus:outline-none"
+          autoFocus
+        />
+        <button
+          onClick={handleRenameSubmit}
+          className="p-1 hover:bg-slate-700 rounded-sm"
+        >
+          <Check className="h-3.5 w-3.5 text-green-400" />
+        </button>
+        <button
+          onClick={onRenameCancel}
+          className="p-1 hover:bg-slate-700 rounded-sm"
+        >
+          <X className="h-3.5 w-3.5 text-red-400" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center group" onClick={onClick}>
       <div className="flex-grow flex items-center">
@@ -79,8 +146,53 @@ const FolderWithActions = ({
   onCreateFolder,
   onRename,
   onDelete,
+  isRenaming,
+  onRenameComplete,
+  onRenameCancel,
 }: FolderWithActionsProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [renameValue, setRenameValue] = useState(file.name);
+
+  const handleRenameSubmit = () => {
+    if (renameValue.trim()) {
+      onRenameComplete(file._id, renameValue.trim());
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit();
+    } else if (e.key === 'Escape') {
+      onRenameCancel();
+    }
+  };
+
+  if (isRenaming) {
+    return (
+      <div className="flex items-center gap-1 py-1 px-2">
+        <input
+          type="text"
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="flex-1 bg-slate-800 text-white px-2 py-1 rounded text-sm border border-slate-600 focus:border-blue-400 focus:outline-none"
+          autoFocus
+        />
+        <button
+          onClick={handleRenameSubmit}
+          className="p-1 hover:bg-slate-700 rounded-sm"
+        >
+          <Check className="h-3.5 w-3.5 text-green-400" />
+        </button>
+        <button
+          onClick={onRenameCancel}
+          className="p-1 hover:bg-slate-700 rounded-sm"
+        >
+          <X className="h-3.5 w-3.5 text-red-400" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -193,12 +305,135 @@ const FolderWithActions = ({
   );
 };
 
-export default function FileSystem(props: Props) {
-  const { activeFileId, setActiveFileId } = props;
-  const [createFile, setCreateFile] = useState<string>();
-  const [createFolder, setCreateFolder] = useState<string>();
-  const [deleteFileOrFolder, setDeleteFileOrFolder] = useState<string>();
-  const [renameItem, setRenameItem] = useState<string>();
+// New Item Input Component
+const NewItemInput = ({
+  type,
+  onComplete,
+  onCancel
+}: {
+  type: 'file' | 'folder';
+  onComplete: (name: string, extension?: string) => void;
+  onCancel: () => void;
+}) => {
+  const [name, setName] = useState('');
+  const [extension, setExtension] = useState('');
+
+  const handleSubmit = () => {
+    if (name.trim()) {
+      onComplete(name.trim(), extension || undefined);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubmit();
+    } else if (e.key === 'Escape') {
+      onCancel();
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1 py-0.5 pl-0.5 pr-2 mb-2">
+      <div className="flex items-center gap-1">
+        {type === 'file' ? (
+          <FileText className="h-4 w-4 text-green-400" />
+        ) : (
+          <FolderPlus className="h-4 w-4 text-blue-400" />
+        )}
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={type === 'file' ? 'filename' : 'folder name'}
+          className="bg-slate-800 text-white px-2 py-1 rounded text-sm border border-slate-600 focus:border-blue-400 focus:outline-none"
+          autoFocus
+        />
+        {type === 'file' && (
+          <input
+            type="text"
+            value={extension}
+            onChange={(e) => setExtension(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="ext"
+            className="bg-slate-800 text-white px-2 py-1 rounded text-sm border border-slate-600 focus:border-blue-400 focus:outline-none w-12"
+          />
+        )}
+      </div>
+      <button
+        onClick={handleSubmit}
+        className="p-1 hover:bg-slate-700 rounded-sm"
+      >
+        <Check className="h-3.5 w-3.5 text-green-400" />
+      </button>
+      <button
+        onClick={onCancel}
+        className="p-1 hover:bg-slate-700 rounded-sm"
+      >
+        <X className="h-3.5 w-3.5 text-red-400" />
+      </button>
+    </div>
+  );
+};
+
+export default function FileSystem({ activeFileId, setActiveFileId, roomId }: Props) {
+  const [createFile, setCreateFile] = useState<string | null>(null);
+  const [createFolder, setCreateFolder] = useState<string | null>(null);
+  const [renameItem, setRenameItem] = useState<string | null>(null);
+  const { user } = useUser();
+  const [fileSystem, setFileSystem] = useState<FileSample[]>([
+    {
+      "_id": "fs_001",
+      "name": "sample.js",
+      "type": "file",
+      "roomId": "room_123",
+      "parentId": null,
+      "createdAt": 1704067200000,
+      "updatedAt": 1704067200000,
+      "createdBy": "user_abc123"
+    }]
+  )
+
+  //TODO: handel fetching state with a loader
+  const [fetchingFiles, setFetchingFiles] = useState(true);
+  const createFileOrFolderFunc = useMutation(api.fileSystem.createFileOrFolder);
+  const updateFileOrFolderFunc = useMutation(api.fileSystem.updateFileOrFolder);
+  const deleteFileOrFolderFunc = useMutation(api.fileSystem.deleteFileOrFolder);
+
+  useEffect(() => {
+    console.log('hit');
+    let ignore = false;
+    const fetchFiles = async () => {
+      try {
+        console.log("insudeeeeeeeeetryyyyy")
+        setFetchingFiles(true);
+        const response = await fetch(`api/rooms/${roomId}/fileSystem`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        console.log("insudeeeeeeeeetryyyyy", response);
+        const data = await response.json();
+        console.log("DATAAAAAAAAAAA", data);
+        if (!ignore) {
+          setFileSystem(data.files);
+        }
+      } catch (error) {
+        console.error('Error fetching files:', error);
+      } finally {
+        if (!ignore) {
+          setFetchingFiles(false);
+        }
+      }
+    };
+    
+    fetchFiles();
+    
+    // Cleanup function to prevent race conditions
+    return () => {
+      ignore = true;
+    };
+  }, [roomId]); // Add roomId as dependency if it can change
+  
 
   const handleCreateFile = async (parentId: string) => {
     setCreateFile(parentId);
@@ -210,14 +445,69 @@ export default function FileSystem(props: Props) {
     console.log("Creating folder in parent:", parentId);
   };
 
+  const handleCreateComplete = async (name: string, extension?: string, type: 'file' | 'folder' = 'file') => {
+    if (!user?.id) return;
+
+    try {
+      const parentId = type === 'file' ? createFile : createFolder;
+
+      await createFileOrFolderFunc({
+        name,
+        roomId: roomId as string,
+        parentId,
+        type,
+        extension,
+        userId: user.id,
+      });
+
+      setCreateFile(null);
+      setCreateFolder(null);
+    } catch (error) {
+      console.error('Error creating item:', error);
+    }
+  };
+
+  const handleCreateCancel = () => {
+    setCreateFile(null);
+    setCreateFolder(null);
+  };
+
+
   const handleDeleteFolderOrFile = async (fileId: string) => {
-    setDeleteFileOrFolder(fileId);
-    console.log("Deleting item:", fileId);
+    if (!user?.id) return;
+
+    try {
+      await deleteFileOrFolderFunc({
+        fileId,
+        userId: user.id,
+      });
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
   };
 
   const handleRenameFile = async (fileId: string) => {
     setRenameItem(fileId);
     console.log("Renaming item:", fileId);
+  };
+
+  const handleRenameComplete = async (fileId: string, newName: string) => {
+    if (!user?.id) return;
+
+    try {
+      await updateFileOrFolderFunc({
+        fileId,
+        name: newName,
+        userId: user.id,
+      });
+      setRenameItem(null);
+    } catch (error) {
+      console.error('Error renaming item:', error);
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setRenameItem(null);
   };
 
   const handleFileClick = (fileId: string) => {
@@ -226,7 +516,8 @@ export default function FileSystem(props: Props) {
   };
 
   const getFileWithParentId = (parentId: string) => {
-    const files = SampleFileSystem.filter((file) => file.parentId == parentId);
+    //TODO: change thisss
+    const files = fileSystem.filter((file) => file.parentId == parentId);
 
     if (files.length === 0) {
       return null;
@@ -245,6 +536,9 @@ export default function FileSystem(props: Props) {
             onClick={() => handleFileClick(file._id)}
             onRename={handleRenameFile}
             onDelete={handleDeleteFolderOrFile}
+            isRenaming={renameItem === file._id}
+            onRenameComplete={handleRenameComplete}
+            onRenameCancel={handleRenameCancel}
           />
         ) : (
           <FolderWithActions
@@ -253,6 +547,9 @@ export default function FileSystem(props: Props) {
             onCreateFolder={handleCreateFolder}
             onRename={handleRenameFile}
             onDelete={handleDeleteFolderOrFile}
+            isRenaming={renameItem === file._id}
+            onRenameComplete={handleRenameComplete}
+            onRenameCancel={handleRenameCancel}
           >
             {getFileWithParentId(file._id)}
           </FolderWithActions>
@@ -262,7 +559,9 @@ export default function FileSystem(props: Props) {
   };
 
   const getRoomFiles = () => {
-    const rootItems = SampleFileSystem.filter((file) => file.parentId === null);
+
+    //Change here too
+    const rootItems = fileSystem.filter((file) => file.parentId === null);
 
     // Arrage by file type like vs code
     const groupFiles = [
@@ -277,6 +576,9 @@ export default function FileSystem(props: Props) {
             onClick={() => handleFileClick(file._id)}
             onRename={handleRenameFile}
             onDelete={handleDeleteFolderOrFile}
+            isRenaming={renameItem === file._id}
+            onRenameComplete={handleRenameComplete}
+            onRenameCancel={handleRenameCancel}
           />
         ) : (
           <FolderWithActions
@@ -285,6 +587,9 @@ export default function FileSystem(props: Props) {
             onCreateFolder={handleCreateFolder}
             onRename={handleRenameFile}
             onDelete={handleDeleteFolderOrFile}
+            isRenaming={renameItem === file._id}
+            onRenameComplete={handleRenameComplete}
+            onRenameCancel={handleRenameCancel}
           >
             {getFileWithParentId(file._id)}
           </FolderWithActions>
@@ -315,12 +620,36 @@ export default function FileSystem(props: Props) {
     );
   };
 
+  //TODO: Handle loading state
+  if (fetchingFiles) {
+    return (
+      <div className="max-h-[80vh] overflow-auto bg-slate-900/50 border border-slate-800 rounded-lg p-4">
+        <div className="text-slate-400 text-sm">Loading files...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen overflow-auto bg-slate-900/50 border border-slate-800 rounded-lg p-4">
-      <h3 className="text-sm font-medium text-slate-300 mb-3 pl-2">
-        Project Files
-      </h3>
+    <div className="max-h-[80vh] overflow-auto bg-slate-900/50 border border-slate-800 rounded-lg p-4">
       {handleRootActions()}
+
+      {/* Show create inputs */}
+      {createFile === null && (
+        <NewItemInput
+          type="file"
+          onComplete={(name, extension) => handleCreateComplete(name, extension, 'file')}
+          onCancel={handleCreateCancel}
+        />
+      )}
+
+      {createFolder === null && (
+        <NewItemInput
+          type="folder"
+          onComplete={(name) => handleCreateComplete(name, undefined, 'folder')}
+          onCancel={handleCreateCancel}
+        />
+      )}
+
       <Tree>{getRoomFiles()}</Tree>
     </div>
   );

@@ -30,10 +30,10 @@ export default function CodeEditorPage() {
   const [leftSide, setLeftSide] = useState(true);
   const [rightSide, setRightSide] = useState(true);
   const [permissions, setPermissions] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { user, isSignedIn, isLoaded } = useUser();
-  const [chatOpen, setChatOpen] = useState<boolean>(false);
+  const [chatOpen, setChatOpen] = useState<boolean>(true);
 
   //TODO : change the type accordingly and also handle the null values
 
@@ -42,36 +42,36 @@ export default function CodeEditorPage() {
 
   //TODO:fetching the messages with respect to the room-id
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (!isLoaded || !isSignedIn) return;
-      try {
-        setIsLoading(true);
-        const response = await fetch(`/api/rooms/${roomId}/access`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
-        });
+  // useEffect(() => {
+  //   const checkAccess = async () => {
+  //     if (!isLoaded || !isSignedIn) return;
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await fetch(`/api/rooms/${roomId}/access`, {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({}),
+  //       });
 
-        const data = await response.json();
-        console.log(data);
+  //       const data = await response.json();
+  //       console.log(data);
 
-        if (!response.ok) {
-          toast.error(data.error || "You don't have access to this room");
-          router.push(`/home/${roomId}/join`);
-          return;
-        }
+  //       if (!response.ok) {
+  //         toast.error(data.error || "You don't have access to this room");
+  //         router.push(`/home/${roomId}/join`);
+  //         return;
+  //       }
 
-        setPermissions(data.permissions || []);
-        setIsLoading(false);
-      } catch (error) {
-        toast.error("Failed to verify room access");
-        router.push("/home");
-      }
-    };
+  //       setPermissions(data.permissions || []);
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       toast.error("Failed to verify room access");
+  //       router.push("/home");
+  //     }
+  //   };
 
-    checkAccess();
-  }, [roomId, router, isLoaded, isSignedIn, setChatOpen]);
+  //   checkAccess();
+  // }, [roomId, router, isLoaded, isSignedIn, setChatOpen]);
 
   if (isLoading) {
     return (
@@ -103,7 +103,7 @@ export default function CodeEditorPage() {
           >
             {/* File Tree Component */}
             {leftSide && (
-              <div className="p-4 h-full">
+              <div className="p-4">
                 <div className="mb-3">
                   <h3 className="text-sm font-medium text-gray-300 mb-2">
                     File Explorer
@@ -112,6 +112,7 @@ export default function CodeEditorPage() {
                 </div>
                 <div className="h-[calc(100%-2rem)] overflow-y-auto">
                   <FileSystem
+                    roomId={roomId}
                     activeFileId={fileId}
                     setActiveFileId={setFileId}
                   />
@@ -130,7 +131,7 @@ export default function CodeEditorPage() {
               rightSide={rightSide}
               setLeftSide={setLeftSide}
               setRightSide={setRightSide}
-              file={{}} // use FileId here and fetch the file ( OR USEMEMO IN PAGE.TSX AND TRANSFER THE CONTENT ). CHeck which is the bset choice and apply it
+              file={fileId} // use FileId here and fetch the file ( OR USEMEMO IN PAGE.TSX AND TRANSFER THE CONTENT ). CHeck which is the bset choice and apply it
               permissions={permissions}
             />
           </div>

@@ -96,8 +96,7 @@ export default defineSchema({
     output: v.optional(v.string()),
     error: v.optional(v.string()),
     executionTime: v.optional(v.number()),
-    isExecutable: v.optional(v.boolean()),    //lookintoit
-
+    isExecutable: v.optional(v.boolean()),
     // lastSyncedContent: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),

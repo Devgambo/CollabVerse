@@ -50,6 +50,7 @@ export function CollaborativeEditor({
   ];
   useEffect(() => {
     if (file) {
+      //file Id --> filecontent and fill content
       // fetchFileContent();
     }
   }, [file]);
@@ -80,6 +81,7 @@ export function CollaborativeEditor({
 
   const autoSaveFile = async (content: string) => {
     // if (!file?.id || !file?.workspaceId) return;
+
     try {
       //TODO: implement autosave
     } catch (error) {
