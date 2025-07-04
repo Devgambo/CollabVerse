@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-  X,
-  Plus,
-  UserMinus,
-  User,
+  User as UserIcon,
   InfoIcon,
   Users,
   Settings,
   Shield,
+  Plus,
 } from "lucide-react";
 import {
   Dialog,
@@ -39,22 +37,47 @@ import {
 } from "@/src/components/ui/select";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
+import {
+  Room,
+  RoomType,
+  RoomUser as RoomUserType,
+  Permission,
+} from "@/src/types/core_interface";
 
-type User = {
-  _id: string;
-  userId: string;
-  role: string;
-  permissions: string[];
+// Enhanced user type with UI-specific fields
+interface EnhancedRoomUser extends RoomUserType {
   user?: {
     name?: string;
     email?: string;
   };
-};
+}
 
-type RoomSettingsModalProps = {
+interface RoomSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   roomId: string;
+}
+
+type PermissionOption = "read" | "write" | "none";
+
+// Helper to convert permission option to actual permissions array
+const permissionOptionToArray = (option: PermissionOption): Permission[] => {
+  switch (option) {
+    case "write":
+      return ["read", "write"];
+    case "read":
+      return ["read"];
+    case "none":
+      return [];
+  }
+};
+
+// Helper to determine permission option from permissions array
+const determinePermissionOption = (
+  permissions?: Permission[],
+): PermissionOption => {
+  if (!permissions || permissions.length === 0) return "none";
+  return permissions.includes("write") ? "write" : "read";
 };
 
 export default function RoomSettingsModal({
@@ -65,56 +88,58 @@ export default function RoomSettingsModal({
   const { user: currentUser } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("general");
-  const [room, setRoom] = useState<any>(null);
-  const [roomUsers, setRoomUsers] = useState<User[]>([]);
+  const [room, setRoom] = useState<Room | null>(null);
+  const [roomUsers, setRoomUsers] = useState<EnhancedRoomUser[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserPermission, setNewUserPermission] = useState<
-    "read" | "write" | "none"
-  >("read");
+  const [newUserPermission, setNewUserPermission] =
+    useState<PermissionOption>("read");
   const [isSaving, setIsSaving] = useState(false);
 
   // Form state
   const [isPublic, setIsPublic] = useState(false);
-  const [roomType, setRoomType] = useState<"collab" | "mentor">("collab");
+  const [roomType, setRoomType] = useState<RoomType>("collab");
 
-  // Fetch room data
-  useEffect(() => {
+  // Fetch room data - optimized with useCallback
+  const fetchRoomData = useCallback(async () => {
     if (!isOpen || !roomId) return;
 
-    const fetchRoomData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch room info
-        const roomResponse = await fetch(`/api/rooms/${roomId}`);
-        if (!roomResponse.ok) throw new Error("Failed to fetch room");
-        const roomData = await roomResponse.json();
-        setRoom(roomData);
-        setIsPublic(roomData.isPublic || false);
-        setRoomType(roomData.roomType || "collab");
+    setIsLoading(true);
+    try {
+      // Parallel fetching for better performance
+      const [roomResponse, usersResponse] = await Promise.all([
+        fetch(`/api/rooms/${roomId}`),
+        fetch(`/api/rooms/${roomId}/members`),
+      ]);
 
-        // Fetch room users
-        const usersResponse = await fetch(`/api/rooms/${roomId}/members`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        if (!usersResponse.ok) throw new Error("Failed to fetch members");
-        const usersData = await usersResponse.json();
-        setRoomUsers(usersData.users || []);
-      } catch (error) {
-        console.error("Error fetching room data:", error);
-        toast.error("Failed to load room settings");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      if (!roomResponse.ok)
+        throw new Error(`Failed to fetch room: ${roomResponse.statusText}`);
+      if (!usersResponse.ok)
+        throw new Error(`Failed to fetch members: ${usersResponse.statusText}`);
 
-    fetchRoomData();
+      const roomData = (await roomResponse.json()) as Room;
+      const usersData = await usersResponse.json();
+
+      setRoom(roomData);
+      setIsPublic(roomData.isPublic || false);
+      setRoomType(roomData.roomType || "collab");
+      setRoomUsers(usersData.users || []);
+    } catch (error) {
+      console.error("Error fetching room data:", error);
+      toast.error("Failed to load room settings");
+    } finally {
+      setIsLoading(false);
+    }
   }, [roomId, isOpen]);
 
+  // Fetch data when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchRoomData();
+    }
+  }, [isOpen, fetchRoomData]);
+
   // Check if current user is room owner
-  const isOwner = room?.ownerId === currentUser?.id;
+  const isOwner = currentUser?.id && room?.ownerId === currentUser.id;
 
   // Handle room settings update
   const handleSaveGeneralSettings = async () => {
@@ -137,14 +162,22 @@ export default function RoomSettingsModal({
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to update room");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update room");
+      }
 
-      const result = await response.json();
       toast.success("Room settings updated successfully");
-      setRoom({ ...room, isPublic, roomType });
+
+      // Update local state with new values
+      setRoom((prev) => (prev ? { ...prev, isPublic, roomType } : null));
     } catch (error) {
       console.error("Error updating room:", error);
-      toast.error("Failed to update room settings");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update room settings",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -164,26 +197,26 @@ export default function RoomSettingsModal({
 
     setIsSaving(true);
     try {
-      // First, we need to check if the user exists in the system
+      // First, check if the user exists
       const checkUserResponse = await fetch(
         `/api/users?email=${encodeURIComponent(newUserEmail)}`,
       );
+
+      if (!checkUserResponse.ok) {
+        throw new Error("Failed to check user existence");
+      }
+
       const userData = await checkUserResponse.json();
 
       if (!userData?.userId) {
         toast.error("User not found with this email");
-        setIsSaving(false);
         return;
       }
 
-      // Now update or add the user to the room
-      const permissions =
-        newUserPermission === "none"
-          ? []
-          : newUserPermission === "write"
-            ? ["read", "write"]
-            : ["read"];
+      // Get permissions array based on selected option
+      const permissions = permissionOptionToArray(newUserPermission);
 
+      // Add the user to the room
       const response = await fetch(`/api/rooms/${roomId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -197,30 +230,24 @@ export default function RoomSettingsModal({
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to add user");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add user");
+      }
 
-      const result = await response.json();
       toast.success("User added successfully");
 
-      // Add the new user to the list or update existing
-      const newUser = {
-        userId: userData.userId,
-        role: newUserPermission === "write" ? "collaborator" : "student",
-        permissions,
-        user: { name: userData.username || "User", email: newUserEmail },
-      };
-
       // Refresh the user list
-      const usersResponse = await fetch(`/api/rooms/${roomId}/members`);
-      const usersData = await usersResponse.json();
-      setRoomUsers(usersData.users || []);
+      await fetchRoomData();
 
       // Reset the form
       setNewUserEmail("");
       setNewUserPermission("read");
     } catch (error) {
       console.error("Error adding user:", error);
-      toast.error("Failed to add user to room");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add user to room",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -229,7 +256,7 @@ export default function RoomSettingsModal({
   // Handle updating user permissions
   const handleUpdateUserPermission = async (
     userId: string,
-    newPermission: "read" | "write" | "none",
+    newPermission: PermissionOption,
   ) => {
     if (!isOwner) {
       toast.error("Only the room owner can modify permissions");
@@ -244,18 +271,12 @@ export default function RoomSettingsModal({
 
     setIsSaving(true);
     try {
-      const permissions =
-        newPermission === "none"
-          ? []
-          : newPermission === "write"
-            ? ["read", "write"]
-            : ["read"];
+      const permissions = permissionOptionToArray(newPermission);
 
       const response = await fetch(`/api/rooms/${roomId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: currentUser?.id,
           type: "roomUser",
           data: {
             targetUserId: userId,
@@ -265,27 +286,33 @@ export default function RoomSettingsModal({
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to update user permissions");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update user permissions");
+      }
 
-      const result = await response.json();
       toast.success("User permissions updated");
 
-      // Update the user in the list
-      const updatedUsers = roomUsers.map((user) => {
-        if (user.userId === userId) {
-          return {
-            ...user,
-            role: newPermission === "write" ? "collaborator" : "student",
-            permissions,
-          };
-        }
-        return user;
-      });
-
-      setRoomUsers(updatedUsers);
+      // Update the user in the local state for immediate UI feedback
+      setRoomUsers((prev) =>
+        prev.map((user) => {
+          if (user.userId === userId) {
+            return {
+              ...user,
+              role: newPermission === "write" ? "collaborator" : "student",
+              permissions,
+            };
+          }
+          return user;
+        }),
+      );
     } catch (error) {
       console.error("Error updating permissions:", error);
-      toast.error("Failed to update user permissions");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update user permissions",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -316,13 +343,13 @@ export default function RoomSettingsModal({
             <TabsList className="grid grid-cols-2 bg-gray-800">
               <TabsTrigger
                 value="general"
-                className="data-[state=active]:bg-gray-700"
+                className="text-white data-[state=active]:bg-gray-700"
               >
                 <Settings className="h-4 w-4 mr-2" /> General
               </TabsTrigger>
               <TabsTrigger
                 value="users"
-                className="data-[state=active]:bg-gray-700"
+                className="text-white data-[state=active]:bg-gray-700"
               >
                 <Users className="h-4 w-4 mr-2" /> Members
               </TabsTrigger>
@@ -341,9 +368,7 @@ export default function RoomSettingsModal({
                     <Select
                       disabled={!isOwner || isSaving}
                       value={roomType}
-                      onValueChange={(value: "collab" | "mentor") =>
-                        setRoomType(value)
-                      }
+                      onValueChange={(value: RoomType) => setRoomType(value)}
                     >
                       <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700">
                         <SelectValue placeholder="Select type" />
@@ -408,12 +433,14 @@ export default function RoomSettingsModal({
                         className="bg-gray-700 border-gray-600"
                         value={newUserEmail}
                         onChange={(e) => setNewUserEmail(e.target.value)}
+                        disabled={isSaving}
                       />
                       <Select
                         value={newUserPermission}
-                        onValueChange={(value: "read" | "write" | "none") =>
+                        onValueChange={(value: PermissionOption) =>
                           setNewUserPermission(value)
                         }
+                        disabled={isSaving}
                       >
                         <SelectTrigger className="w-[120px] bg-gray-700 border-gray-600">
                           <SelectValue placeholder="Permission" />
@@ -443,13 +470,9 @@ export default function RoomSettingsModal({
                 <div className="space-y-2">
                   {roomUsers.map((roomUser) => {
                     const isRoomOwner = roomUser.userId === room?.ownerId;
-                    const currentPermission = roomUser.permissions?.includes(
-                      "write",
-                    )
-                      ? "write"
-                      : roomUser.permissions?.includes("read")
-                        ? "read"
-                        : "none";
+                    const currentPermission = determinePermissionOption(
+                      roomUser.permissions,
+                    );
 
                     return (
                       <div
@@ -458,7 +481,7 @@ export default function RoomSettingsModal({
                       >
                         <div className="flex items-center gap-3">
                           <div className="bg-gray-700 h-8 w-8 rounded-full flex items-center justify-center">
-                            <User className="h-4 w-4" />
+                            <UserIcon className="h-4 w-4" />
                           </div>
                           <div>
                             <p className="text-sm font-medium">
@@ -478,7 +501,7 @@ export default function RoomSettingsModal({
                         {!isRoomOwner && isOwner ? (
                           <Select
                             value={currentPermission}
-                            onValueChange={(value: "read" | "write" | "none") =>
+                            onValueChange={(value: PermissionOption) =>
                               handleUpdateUserPermission(roomUser.userId, value)
                             }
                             disabled={isSaving}

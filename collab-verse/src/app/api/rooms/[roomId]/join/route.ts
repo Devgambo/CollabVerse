@@ -3,10 +3,11 @@ import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { currentUser } from "@clerk/nextjs/server";
 import { v4 as uuidv4 } from "uuid";
+import { RoomUsers } from "@/src/types/funciton_interface";
 
 export async function POST(
   request: Request,
-  { params }: { params: { roomId: string } },
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   const user = await currentUser();
   if (!user?.id) {
@@ -51,7 +52,7 @@ export async function POST(
         }
 
         const userInRoom = roomUsers.find(
-          (ru: any) => ru.userId === existingUser.userId,
+          (ru: RoomUsers) => ru.userId === existingUser.userId,
         );
 
         if (userInRoom) {

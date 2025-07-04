@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { Button } from "@/src/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { Invitation, Room } from "@/src/types/core_interface";
 
 export default function JoinRoomPage() {
   const params = useParams();
@@ -18,8 +19,10 @@ export default function JoinRoomPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [roomDetails, setRoomDetails] = useState<any>(null);
-  const [invitationDetails, setInvitationDetails] = useState<any>(null);
+  const [roomDetails, setRoomDetails] = useState<Room | null>(null);
+  const [invitationDetails, setInvitationDetails] = useState<Invitation | null>(
+    null,
+  );
 
   useEffect(() => {
     const fetchRoomAndInvitation = async () => {
@@ -47,6 +50,7 @@ export default function JoinRoomPage() {
         }
       } catch (err) {
         setError("Failed to load room details");
+        console.log(err);
       } finally {
         setIsProcessing(false);
       }
@@ -81,6 +85,7 @@ export default function JoinRoomPage() {
         }
       } catch (err) {
         setError("Failed to process room access");
+        console.log(err);
       } finally {
         setIsProcessing(false);
       }
@@ -177,6 +182,7 @@ export default function JoinRoomPage() {
       <div className="w-full max-w-md rounded-lg border border-gray-800 bg-gray-800/50 p-6 text-center backdrop-blur-sm">
         <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-500" />
         <h2 className="text-xl font-medium text-white">Joining room...</h2>
+        <div>{invitationDetails?.email || "Email not found"}</div>
       </div>
     </div>
   );

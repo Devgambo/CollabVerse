@@ -3,24 +3,19 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Loader2,
-  MessageCircleDashedIcon,
-  MessageCircleIcon,
-  Text,
-} from "lucide-react";
+import { Loader2, MessageCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
-import ChatBox from "../components/ChatBox";
-import FileSystem from "../components/FileSystem";
-import OutputBox from "../components/OutputBox";
+import ChatBox from "@/src/components/code-editor-components/ChatBox";
+import FileSystem from "@/src/components/FileSystem";
+import OutputBox from "@/src/components/OutputBox";
 import { cn } from "@/src/lib/utils";
 
 const CollaborativeEditorWithNoSSR = dynamic(
   () =>
-    import(
-      "@/src/app/(core)/home/[roomId]/room/components/ColloborativeEditor"
-    ).then((mod) => mod.CollaborativeEditor),
+    import("@/src/components/code-editor-components/ColloborativeEditor").then(
+      (mod) => mod.CollaborativeEditor,
+    ),
   { ssr: false },
 );
 
@@ -32,16 +27,12 @@ export default function CodeEditorPage() {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { user, isSignedIn, isLoaded } = useUser();
-  const [chatOpen, setChatOpen] = useState<boolean>(false);
-
-  //TODO : change the type accordingly and also handle the null values
+  const { isSignedIn, isLoaded } = useUser();
+  const [chatOpen, setChatOpen] = useState<boolean>(true);
 
   const [fileId, setFileId] = useState<string>("");
-  const [fileContent, setFileContent] = useState<string>();
 
   //TODO:fetching the messages with respect to the room-id
-
   useEffect(() => {
     const checkAccess = async () => {
       if (!isLoaded || !isSignedIn) return;
@@ -66,6 +57,7 @@ export default function CodeEditorPage() {
         setIsLoading(false);
       } catch (error) {
         toast.error("Failed to verify room access");
+        console.log(error);
         router.push("/home");
       }
     };
@@ -103,7 +95,7 @@ export default function CodeEditorPage() {
           >
             {/* File Tree Component */}
             {leftSide && (
-              <div className="p-4 h-full">
+              <div className="p-4">
                 <div className="mb-3">
                   <h3 className="text-sm font-medium text-gray-300 mb-2">
                     File Explorer
@@ -111,7 +103,9 @@ export default function CodeEditorPage() {
                   <div className="h-px bg-gray-700/50"></div>
                 </div>
                 <div className="h-[calc(100%-2rem)] overflow-y-auto">
+                  {/*  TODO : Fix the expand thing + delete message to show users that please delete all children */}
                   <FileSystem
+                    roomId={roomId}
                     activeFileId={fileId}
                     setActiveFileId={setFileId}
                   />
@@ -130,7 +124,7 @@ export default function CodeEditorPage() {
               rightSide={rightSide}
               setLeftSide={setLeftSide}
               setRightSide={setRightSide}
-              file={{}} // use FileId here and fetch the file ( OR USEMEMO IN PAGE.TSX AND TRANSFER THE CONTENT ). CHeck which is the bset choice and apply it
+              fileId={fileId}
               permissions={permissions}
             />
           </div>

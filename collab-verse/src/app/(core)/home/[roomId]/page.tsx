@@ -21,33 +21,28 @@ import { Separator } from "@/src/components/ui/separator";
 import {
   Loader2,
   UserPlus,
-  Settings,
   Info,
   Code2,
   ArrowLeft,
-  Users,
   Share2,
   Lock,
   Unlock,
   Calendar,
-  Clock,
 } from "lucide-react";
 import { motion, easeInOut } from "framer-motion";
-
-// TODO : FIx accordingly to new features + Permissions
-
-import RoomInfoForm from "./components/RoomInfoForm";
+import RoomInfoForm from "@/src/components/room-components/RoomInfoForm";
+import { RoomData } from "@/src/types/funciton_interface";
 
 export default function RoomSettingsPage() {
-  const params = useParams();
+  const { id } = useParams();
   const router = useRouter();
-  const id = params.roomId as string;
-  const [room, setRoom] = useState<any>(null);
+
+  const [room, setRoom] = useState<RoomData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("room-info");
 
   useEffect(() => {
-    fetchRoomById(id);
+    fetchRoomById(id as string);
   }, [id]);
 
   const fetchRoomById = async (roomId: string) => {
@@ -158,26 +153,11 @@ export default function RoomSettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3 text-sm">
-                    <Users className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-300">
-                      {room?.users?.length || 0} members
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
                     <Calendar className="w-4 h-4 text-slate-400" />
                     <span className="text-slate-300">
                       Created{" "}
                       {new Date(
                         room?.createdAt || Date.now(),
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-300">
-                      Updated{" "}
-                      {new Date(
-                        room?.updatedAt || Date.now(),
                       ).toLocaleDateString()}
                     </span>
                   </div>
@@ -235,59 +215,15 @@ export default function RoomSettingsPage() {
                         </span>
                         <span className="sm:hidden">Info</span>
                       </TabsTrigger>
-                      {/* <TabsTrigger
-                        value="room-settings"
-                        className="flex items-center gap-2 data-[state=active]:bg-slate-700 data-[state=active]:text-white"
-                      >
-                        <Settings className="w-4 h-4" />
-                        <span className="hidden sm:block">Editor Settings</span>
-                        <span className="sm:hidden">Settings</span>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="room-users"
-                        className="flex items-center gap-2 data-[state=active]:bg-slate-700 data-[state=active]:text-white"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        <span className="hidden sm:block">User Management</span>
-                        <span className="sm:hidden">Users</span>
-                      </TabsTrigger> */}
                     </TabsList>
 
                     <TabsContent value="room-info">
                       <RoomInfoForm
                         room={room}
-                        roomId={id}
+                        roomId={id as string}
                         onUpdate={fetchRoomById}
                       />
                     </TabsContent>
-
-                    {/* <TabsContent value="room-settings">
-                      <div className="space-y-6">
-                        <div className="text-center py-12">
-                          <Settings className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-slate-300 mb-2">
-                            Editor Settings
-                          </h3>
-                          <p className="text-slate-400">
-                            Coming soon - Configure your editor preferences
-                          </p>
-                        </div>
-                      </div>
-                    </TabsContent> */}
-
-                    {/* <TabsContent value="room-users">
-                      <div className="space-y-6">
-                        <div className="text-center py-12">
-                          <UserPlus className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-slate-300 mb-2">
-                            User Management
-                          </h3>
-                          <p className="text-slate-400">
-                            Coming soon - Manage room members and permissions
-                          </p>
-                        </div>
-                      </div>
-                    </TabsContent> */}
                   </Tabs>
                 </CardContent>
               </Card>

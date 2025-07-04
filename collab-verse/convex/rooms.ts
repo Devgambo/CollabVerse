@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 export const createRoom = mutation({
   args: {
@@ -18,7 +17,7 @@ export const createRoom = mutation({
       lastAccessed: Date.now(),
     });
 
-    const roomUsers = await ctx.db.insert("roomUsers", {
+    await ctx.db.insert("roomUsers", {
       roomId: roomId,
       userId: args.ownerId,
       role: "owner",
@@ -285,7 +284,6 @@ export const deleteRoom = mutation({
   },
 });
 
-// convex/queries/getRoomData.ts
 export const getRoomData = query({
   args: {
     roomId: v.string(),
@@ -305,27 +303,9 @@ export const getRoomData = query({
       .withIndex("by_room", (q) => q.eq("roomId", roomId))
       .first();
 
-    //TODO: whose parent is null
-    const files = await ctx.db
-      .query("filesystem")
-      .withIndex("by_room", (q) => q.eq("roomId", roomId))
-      .collect();
-
-
-    //Store content in fileSnapshot...
-    //FIX
-    const fileSnapshots: Record<string, string> = {};
-    // for (const file of files) {
-    //   if (file.type === "file" && file.lastSyncedContent) {
-    //     fileSnapshots[file._id] = file.lastSyncedContent;
-    //   }
-    // }
-
     return {
       roomId: room._id,
       activeFileId: roomContent?.activeFileId ?? null,
-      whiteboard: [],
-      fileSnapshots,
       settings: roomContent?.settings ?? {},
     };
   },

@@ -3,12 +3,15 @@ import { Liveblocks } from "@liveblocks/node";
 import { currentUser } from "@clerk/nextjs/server";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
+import { Room } from "@/src/types/core_interface";
 
 const liveblocks = new Liveblocks({
   secret: process.env.LIVEBLOCKS_SECRET_KEY || "",
 });
 
-export async function GET(request: Request) {
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "");
+
+export async function GET() {
   const user = await currentUser();
 
   if (!user?.id) {
@@ -16,14 +19,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    const convex = new ConvexHttpClient(
-      process.env.NEXT_PUBLIC_CONVEX_URL || "",
-    );
     const rooms = await convex.query(api.rooms.getRooms, {
       userId: user.id,
     });
 
-    const formattedRooms = rooms.map((room: any) => ({
+    const formattedRooms = rooms.map((room: Room) => ({
       ...room,
       createdAt: new Date(room.createdAt).toISOString(),
       lastAccessed: new Date(room.lastAccessed).toISOString(),
@@ -47,10 +47,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const convex = new ConvexHttpClient(
-      process.env.NEXT_PUBLIC_CONVEX_URL || "",
-    );
-
     const response = await convex.mutation(api.rooms.createRoom, {
       name: body.roomName,
       ownerId: user.id,
@@ -124,10 +120,6 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const convex = new ConvexHttpClient(
-      process.env.NEXT_PUBLIC_CONVEX_URL || "",
-    );
-
     // First check if the room exists and user is the owner
     const room = await convex.query(api.rooms.getRoomById, {
       roomId: body.roomId,
@@ -144,8 +136,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Delete from Convex after owner is affirmed
-    const deleteResult = await convex.mutation(api.rooms.deleteRoom, {
+    await convex.mutation(api.rooms.deleteRoom, {
       roomId: body.roomId,
       ownerId: user.id,
     });

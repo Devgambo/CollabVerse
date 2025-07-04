@@ -14,15 +14,12 @@ import { Card, CardContent } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import {
   Code2,
-  Users,
   Zap,
   Shield,
   Sparkles,
   ArrowRight,
-  Github,
   Terminal,
   Palette,
-  Globe,
 } from "lucide-react";
 
 export default function Home() {

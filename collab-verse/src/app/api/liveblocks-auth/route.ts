@@ -1,13 +1,11 @@
 import { Liveblocks } from "@liveblocks/node";
 import { currentUser } from "@clerk/nextjs/server";
-import { api } from "@/convex/_generated/api";
-import { ConvexHttpClient } from "convex/browser";
 
 const liveblocks = new Liveblocks({
   secret: process.env.LIVEBLOCKS_SECRET_KEY!,
 });
 
-export async function POST(request: Request) {
+export async function POST() {
   const user = await currentUser();
 
   if (!user?.id) {

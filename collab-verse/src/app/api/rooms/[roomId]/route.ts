@@ -8,9 +8,11 @@ const liveblocks = new Liveblocks({
   secret: process.env.LIVEBLOCKS_SECRET_KEY || "",
 });
 
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "");
+
 export async function GET(
   request: Request,
-  { params }: { params: { roomId: string } },
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   const user = await currentUser();
 
@@ -27,10 +29,6 @@ export async function GET(
   }
 
   try {
-    const convex = new ConvexHttpClient(
-      process.env.NEXT_PUBLIC_CONVEX_URL || "",
-    );
-
     const roomData = await convex.query(api.rooms.getRoomById, {
       roomId: roomId,
     });
@@ -73,33 +71,22 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { roomId: string } },
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
-  const requestId = "PATCH LOGS";
-  console.log(`[${requestId}] PATCH request for room ${params.roomId}`);
+  const { roomId } = await params;
 
   const user = await currentUser();
 
   if (!user?.id) {
-    console.log(`[${requestId}] Unauthorized - No user found`);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { roomId } = await params;
   if (!roomId) {
-    console.log(`[${requestId}] Bad request - Missing roomId`);
     return NextResponse.json({ error: "Room ID required" }, { status: 400 });
   }
 
   try {
     const body = await request.json();
-    console.log(
-      `[${requestId}] Processing ${body.type} update for room ${roomId}`,
-    );
-
-    const convex = new ConvexHttpClient(
-      process.env.NEXT_PUBLIC_CONVEX_URL || "",
-    );
 
     console.log(body);
 
@@ -116,10 +103,6 @@ export async function PATCH(
 
           console.log(roomInfo);
           if (!roomInfo.success) {
-            console.error(
-              `[${requestId}] Convex update failed:`,
-              roomInfo.error,
-            );
             return NextResponse.json(
               { error: roomInfo.error || "Failed to update room in database" },
               { status: 400 },
@@ -154,9 +137,6 @@ export async function PATCH(
                     : [],
             });
 
-            console.log(
-              `[${requestId}] Room info updated successfully in both systems`,
-            );
             return NextResponse.json({
               success: true,
               convex: roomInfo,
@@ -165,20 +145,16 @@ export async function PATCH(
               },
             });
           } catch (liveblocksError) {
-            console.error(
-              `[${requestId}] Liveblocks update failed:`,
-              liveblocksError,
-            );
-            // We still return success since the main database was updated
             return NextResponse.json({
               success: true,
               warning:
                 "Room info updated in database but not in real-time collaboration service",
               convex: roomInfo,
+              liveblocksError,
             });
           }
         } catch (error) {
-          console.error(`[${requestId}] Room info update error:`, error);
+          console.error(`Room info update error:`, error);
           throw error;
         }
 
@@ -193,20 +169,17 @@ export async function PATCH(
           );
 
           if (!roomContent.success) {
-            console.error(
-              `[${requestId}] Content update failed:`,
-              roomContent.error,
-            );
+            console.error(` Content update failed:`, roomContent.error);
             return NextResponse.json(
               { error: roomContent.error },
               { status: 400 },
             );
           }
 
-          console.log(`[${requestId}] Room content updated successfully`);
+          console.log(` Room content updated successfully`);
           return NextResponse.json(roomContent);
         } catch (error) {
-          console.error(`[${requestId}] Room content update error:`, error);
+          console.error(` Room content update error:`, error);
           throw error;
         }
 
@@ -219,10 +192,7 @@ export async function PATCH(
           });
 
           if (!roomUser.success) {
-            console.error(
-              `[${requestId}] User permission update failed:`,
-              roomUser.error,
-            );
+            console.error(` User permission update failed:`, roomUser.error);
             return NextResponse.json(
               { error: roomUser.error },
               { status: 400 },
@@ -250,12 +220,12 @@ export async function PATCH(
             liveblocksAccesses[room.ownerId] = ["room:write"];
 
             // Map other users based on their roles/permissions
-            roomUsers.forEach((user: any) => {
+            roomUsers.forEach((user) => {
               if (user.userId === room.ownerId) return;
 
-              if (user.permissions.includes("write")) {
+              if (user.permissions?.includes("write")) {
                 liveblocksAccesses[user.userId] = ["room:write"];
-              } else if (user.permissions.includes("read")) {
+              } else if (user.permissions?.includes("read")) {
                 liveblocksAccesses[user.userId] = [
                   "room:read",
                   "room:presence:write",
@@ -271,7 +241,7 @@ export async function PATCH(
             });
 
             console.log(
-              `[${requestId}] User permissions updated successfully in both systems`,
+              `User permissions updated successfully in both systems`,
             );
             return NextResponse.json({
               success: true,
@@ -282,7 +252,7 @@ export async function PATCH(
             });
           } catch (liveblocksError) {
             console.error(
-              `[${requestId}] Liveblocks permission update failed:`,
+              `Liveblocks permission update failed:`,
               liveblocksError,
             );
             // Return success with a warning since the main DB was updated
@@ -294,24 +264,23 @@ export async function PATCH(
             });
           }
         } catch (error) {
-          console.error(`[${requestId}] User permission update error:`, error);
+          console.error(`User permission update error:`, error);
           throw error;
         }
 
       default:
-        console.warn(`[${requestId}] Invalid update type: ${body.type}`);
+        console.warn(`Invalid update type: ${body.type}`);
         return NextResponse.json(
           { error: `Invalid update type: '${body.type}'` },
           { status: 400 },
         );
     }
   } catch (error) {
-    console.error(`[${requestId}] Unhandled error:`, error);
+    console.error(`Unhandled error:`, error);
     return NextResponse.json(
       {
         error: "Failed to update room",
-        details: error instanceof Error ? error.message : String(error),
-        requestId, // Include for support reference
+        details: error instanceof Error ? error.message : String(error), // Include for support reference
       },
       { status: 500 },
     );

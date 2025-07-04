@@ -5,7 +5,7 @@ import { currentUser } from "@clerk/nextjs/server";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { roomId: string } },
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   const user = await currentUser();
   if (!user?.id) {

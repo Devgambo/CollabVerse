@@ -51,11 +51,9 @@ export default defineSchema({
     editedAt: v.optional(v.number()),
   }).index("by_room", ["roomId"]),
 
-
   roomContent: defineTable({
     roomId: v.id("rooms"),
-    //?????
-    liveblockWhiteboardId: v.optional(v.string()), // e.g. "room:<roomId>:whiteboard"   ??
+    liveblockWhiteboardId: v.optional(v.string()),
     activeFileId: v.optional(v.id("filesystem")),
     settings: v.optional(
       v.object({
@@ -64,17 +62,16 @@ export default defineSchema({
         tabSize: v.optional(v.number()),
       }),
     ),
-    version: v.number(),    //inc after every save (1,2,3,...)
+    version: v.number(),
     savedAt: v.number(),
     autoSaveEnabled: v.optional(v.boolean()),
   }).index("by_room", ["roomId"]),
-
 
   filesystem: defineTable({
     name: v.string(),
     type: v.union(v.literal("file"), v.literal("folder")),
     roomId: v.id("rooms"),
-    parentId: v.optional(v.id("filesystem")), // null for root
+    parentId: v.union(v.id("filesystem"), v.null()), // null for root
     extension: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -87,8 +84,6 @@ export default defineSchema({
     .index("by_room_type", ["roomId", "type"])
     .index("by_created_by", ["createdBy"]),
 
-
-
   fileContent: defineTable({
     fileId: v.id("filesystem"),
     content: v.optional(v.string()),
@@ -96,14 +91,11 @@ export default defineSchema({
     output: v.optional(v.string()),
     error: v.optional(v.string()),
     executionTime: v.optional(v.number()),
-    isExecutable: v.optional(v.boolean()),    //lookintoit
-
+    // isExecutable: v.optional(v.boolean()),
     // lastSyncedContent: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-  .index("by_fileId", ["fileId"]),
-
+  }).index("by_fileId", ["fileId"]),
 
   // Add invitations table for handling email invites
   invitations: defineTable({
