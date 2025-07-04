@@ -38,6 +38,7 @@ export default function CodeEditorPage() {
   //TODO : change the type accordingly and also handle the null values
 
   const [fileId, setFileId] = useState<string>("");
+
   const [fileContent, setFileContent] = useState<string>();
 
   //TODO:fetching the messages with respect to the room-id
@@ -131,7 +132,7 @@ export default function CodeEditorPage() {
               rightSide={rightSide}
               setLeftSide={setLeftSide}
               setRightSide={setRightSide}
-              file={fileId} // use FileId here and fetch the file ( OR USEMEMO IN PAGE.TSX AND TRANSFER THE CONTENT ). CHeck which is the bset choice and apply it
+              fileId={fileId} // use FileId here and fetch the file ( OR USEMEMO IN PAGE.TSX AND TRANSFER THE CONTENT ). CHeck which is the bset choice and apply it
               permissions={permissions}
             />
           </div>
