@@ -37,6 +37,7 @@ export const createFileOrFolder = mutation({
     parentId: v.optional(v.union(v.string(), v.null())),
     type: v.union(v.literal("file"), v.literal("folder")),
     extension: v.optional(v.string()),
+    language: v.optional(v.string()),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -59,6 +60,14 @@ export const createFileOrFolder = mutation({
       updatedAt: Date.now(),
       createdBy: args.userId,
       lastModifiedBy: args.userId,
+    });
+
+    await ctx.db.insert("fileContent", {
+      fileId: fileId,
+      content: "",
+      language: args.language,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     return { success: true, fileId };
@@ -165,13 +174,14 @@ export const getFileContent = query({
     const content = await ctx.db
       .query("fileContent")
       .filter((eachContent) =>
-        eachContent.eq(eachContent.field("fileId"), fileId))
-      .collect()
+        eachContent.eq(eachContent.field("fileId"), fileId),
+      )
+      .collect();
 
     if (content.length === 0) {
       return { success: false, error: "File content not found" };
     }
-    
+
     return { success: true, data: content };
   },
 });

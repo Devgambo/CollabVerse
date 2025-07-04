@@ -23,6 +23,7 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
+import { mapExtensionToLanguage } from "@/src/lib/utils";
 
 type OperationType =
   | "create-file"
@@ -184,7 +185,7 @@ const DeleteConfirmation = ({
 
   return (
     <div className="p-3 bg-slate-800 border border-slate-700 rounded-md mb-2">
-      <div className="flex items-center gap-2 mb-3">
+      {/* <div className="flex items-center gap-2 mb-3">
         <AlertCircle className="h-5 w-5 text-amber-400" />
         <span className="text-sm font-medium">Delete {item.type}</span>
       </div>
@@ -195,8 +196,9 @@ const DeleteConfirmation = ({
         <span className="text-red-400 text-xs mt-1 block">
           This action cannot be undone.
         </span>
-      </p>
-      <div className="flex justify-end gap-2">
+      </p> */}
+      <div>Deleting</div>
+      {/* <div className="flex justify-end gap-2">
         <button
           onClick={onCancel}
           className="px-3 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600 text-white"
@@ -209,7 +211,7 @@ const DeleteConfirmation = ({
         >
           Delete
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -491,9 +493,6 @@ let processFileRename: (
   extension?: string,
 ) => Promise<void>;
 
-
-
-
 //////////////////////MAIN COMPONENT
 
 export default function FileSystem({
@@ -511,8 +510,10 @@ export default function FileSystem({
   const createFileOrFolder = useMutation(api.fileSystem.createFileOrFolder);
   const updateFileOrFolder = useMutation(api.fileSystem.updateFileOrFolder);
   const deleteFileOrFolder = useMutation(api.fileSystem.deleteFileOrFolder);
-  const filesList = useQuery(api.fileSystem.getFilesFolders, { roomId: roomId as string }) as {
-      files: FileSample[]
+  const filesList = useQuery(api.fileSystem.getFilesFolders, {
+    roomId: roomId as string,
+  }) as {
+    files: FileSample[];
   };
 
   console.log(filesList);
@@ -523,7 +524,7 @@ export default function FileSystem({
       setFileSystem(filesList.files || []);
     }
   }, [filesList]);
-  
+
   // Define the API operation handlers for use in child components
   processFileCreate = async (
     parentId: string | null,
@@ -539,6 +540,8 @@ export default function FileSystem({
     try {
       setIsProcessing(true);
       const toastId = toast.loading("Creating file...");
+      const language = mapExtensionToLanguage(extension);
+      console.log(language);
 
       await createFileOrFolder({
         name,
@@ -546,12 +549,12 @@ export default function FileSystem({
         parentId: parentId,
         type: "file",
         extension: extension || "",
+        language: language,
         userId: user.id,
       });
 
       toast.success("File created successfully", { id: toastId });
       setActiveOperation(null);
-      // await fetchFilesFromServer();
     } catch (error) {
       console.error("Error creating file:", error);
       toast.error("Failed to create file");

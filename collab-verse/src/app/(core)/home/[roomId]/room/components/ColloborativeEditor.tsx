@@ -55,32 +55,37 @@ export function CollaborativeEditor({
   const provider = getYjsProviderForRoom(room);
   const [editorRef, setEditorRef] = useState<editor.IStandaloneCodeEditor>();
   const [isWrite, setIsWrite] = useState<boolean>(false);
-  const [codeLanguage, setCodeLanguage] = useState("javascript");
+  const [codeLanguage, setCodeLanguage] = useState<string>("typescript"); // Default to typescript
   const [selectedTheme, setSelectedTheme] = useState("vs-dark");
   const [editorContent, setEditorContent] = useState<string>("");
-  
+  const [initialLoad, setInitialLoad] = useState<boolean>(true);
+
   // Keep track of the previous fileId to handle file switching
   const prevFileIdRef = useRef<string>("");
   const prevContentRef = useRef<string>("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Store current language to ensure it doesn't change during saves
+  const fileLanguageRef = useRef<string>("typescript");
+
   // Queries and mutations
   const fetchContent = useQuery(api.fileSystem.getFileContent, { fileId });
   const saveContent = useMutation(api.fileSystem.saveFileContent);
 
-  // Debounced save function
+  // Debounced save function - now preserves the original language
   const debouncedSave = useCallback(
-    (content: string, language: string, targetFileId: string) => {
+    (content: string, targetFileId: string) => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      
+
       saveTimeoutRef.current = setTimeout(async () => {
         try {
+          // Only send content in debounced save, keep language as is
           await saveContent({
             fileId: targetFileId,
-            content,
-            language,
+            content: content,
+            // Don't pass language here to avoid overwriting it
           });
         } catch (error) {
           console.error("Failed to save content:", error);
@@ -88,22 +93,23 @@ export function CollaborativeEditor({
         }
       }, 1000); // 1 second debounce
     },
-    [saveContent]
+    [saveContent],
   );
 
   // Handle file switching - save current content and load new content
   useEffect(() => {
     const handleFileSwitch = async () => {
-      // If we're switching files and have previous content to save
-      if (prevFileIdRef.current && 
-          prevFileIdRef.current !== fileId && 
-          prevContentRef.current) {
+      if (
+        prevFileIdRef.current &&
+        prevFileIdRef.current !== fileId &&
+        prevContentRef.current
+      ) {
         try {
           // Save the previous file's content immediately
           await saveContent({
             fileId: prevFileIdRef.current,
             content: prevContentRef.current,
-            language: codeLanguage,
+            // Don't pass language to avoid overwriting
           });
         } catch (error) {
           console.error("Failed to save previous file:", error);
@@ -113,52 +119,65 @@ export function CollaborativeEditor({
 
       // Update the previous file reference
       prevFileIdRef.current = fileId;
+      setInitialLoad(true); // Mark as initial load for the new file
     };
 
     if (fileId) {
       handleFileSwitch();
     }
-  }, [fileId, saveContent, codeLanguage]);
+  }, [fileId, saveContent]);
 
   // Load file content when fileId changes or content is fetched
   useEffect(() => {
-    if (fetchContent?.success && Array.isArray(fetchContent.data) && fetchContent.data.length > 0) {
+    if (
+      fetchContent?.success &&
+      Array.isArray(fetchContent.data) &&
+      fetchContent.data.length > 0
+    ) {
       const fileContentData = fetchContent.data[0] as sampleFileContent;
       const content = fileContentData.content || "// Start your coding journey";
-      const language = fileContentData.language || "javascript";
-      
+
+      // Get language from file content data, with fallback to current language
+      const language = fileContentData.language || fileLanguageRef.current;
+      fileLanguageRef.current = language; // Store the language reference
+
       setEditorContent(content);
       setCodeLanguage(language);
       prevContentRef.current = content;
-      
+
       // Update editor content if editor is ready
       if (editorRef && editorRef.getValue() !== content) {
         editorRef.setValue(content);
       }
     } else if (fetchContent?.success === false) {
       // File has no content yet, set default
-      const defaultContent = CODE_SNIPPETS[codeLanguage as keyof typeof CODE_SNIPPETS] || "// Start your coding journey";
+      const defaultContent =
+        CODE_SNIPPETS[fileLanguageRef.current as keyof typeof CODE_SNIPPETS] ||
+        "// Start your coding journey";
       setEditorContent(defaultContent);
       prevContentRef.current = defaultContent;
-      
+
       if (editorRef) {
         editorRef.setValue(defaultContent);
       }
     }
-  }, [fetchContent, fileId, codeLanguage, editorRef]);
+  }, [fetchContent, fileId, editorRef]);
 
   // Handle editor content changes
-  const handleEditorChange = useCallback((value: string | undefined) => {
-    if (value !== undefined) {
-      setEditorContent(value);
-      prevContentRef.current = value;
-      
-      // Only save if user has write permissions
-      if (isWrite && fileId) {
-        debouncedSave(value, codeLanguage, fileId);
+  const handleEditorChange = useCallback(
+    (value: string | undefined) => {
+      if (value !== undefined) {
+        setEditorContent(value);
+        prevContentRef.current = value;
+
+        // Only save if user has write permissions
+        if (isWrite && fileId) {
+          debouncedSave(value, fileId);
+        }
       }
-    }
-  }, [isWrite, fileId, codeLanguage, debouncedSave]);
+    },
+    [isWrite, fileId, debouncedSave],
+  );
 
   // Handle permissions
   useEffect(() => {
@@ -176,7 +195,7 @@ export function CollaborativeEditor({
   // Handle Monaco binding for collaborative editing
   useEffect(() => {
     let binding: MonacoBinding;
-    
+
     if (editorRef && provider) {
       const yDoc = provider.getYDoc();
       const yText = yDoc.getText(`monaco-${fileId}`); // Use fileId specific text..So that it can have seperate space
@@ -194,47 +213,63 @@ export function CollaborativeEditor({
     };
   }, [editorRef, provider, fileId]);
 
-
-  // // Clear editor when fileId changes
-  // useEffect(() => {
-  //   if (editorRef && fileId) {
-  //     clearEditor();
-  //   }
-  // }, [fileId, editorRef, clearEditor]);
-
   // Handle editor mount
-  const handleOnMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
-    setEditorRef(editor);
+  const handleOnMount = useCallback(
+    (editor: editor.IStandaloneCodeEditor) => {
+      setEditorRef(editor);
 
-    // Set initial content
-    if (editorContent) {
-      editor.setValue(editorContent);
+      // Set initial content
+      if (editorContent) {
+        editor.setValue(editorContent);
+      }
+
+      // Configure editor options
+      editor.updateOptions({
+        readOnly: !isWrite,
+        fontSize: 14,
+        fontFamily: "JetBrains Mono, Consolas, Monaco, monospace",
+        lineHeight: 1.6,
+        minimap: { enabled: true },
+        scrollBeyondLastLine: false,
+        wordWrap: "on",
+        automaticLayout: true,
+        padding: { top: 16, bottom: 16 },
+        renderWhitespace: "selection",
+        cursorBlinking: "smooth",
+        cursorSmoothCaretAnimation: "on",
+        smoothScrolling: true,
+        folding: true,
+        foldingHighlight: true,
+        bracketPairColorization: { enabled: true },
+        guides: {
+          bracketPairs: true,
+          indentation: true,
+        },
+      });
+    },
+    [editorContent, isWrite],
+  );
+
+  // Handle language changes - only for initial load
+  useEffect(() => {
+    if (initialLoad && fileId && fileLanguageRef.current) {
+      setInitialLoad(false);
+
+      // On initial load, update the file with the correct language
+      const updateLanguage = async () => {
+        try {
+          await saveContent({
+            fileId: fileId,
+            language: fileLanguageRef.current,
+          });
+        } catch (error) {
+          console.error("Failed to update language:", error);
+        }
+      };
+
+      updateLanguage();
     }
-
-    // Configure editor options
-    editor.updateOptions({
-      readOnly: !isWrite,
-      fontSize: 14,
-      fontFamily: "JetBrains Mono, Consolas, Monaco, monospace",
-      lineHeight: 1.6,
-      minimap: { enabled: true },
-      scrollBeyondLastLine: false,
-      wordWrap: "on",
-      automaticLayout: true,
-      padding: { top: 16, bottom: 16 },
-      renderWhitespace: "selection",
-      cursorBlinking: "smooth",
-      cursorSmoothCaretAnimation: "on",
-      smoothScrolling: true,
-      folding: true,
-      foldingHighlight: true,
-      bracketPairColorization: { enabled: true },
-      guides: {
-        bracketPairs: true,
-        indentation: true,
-      },
-    });
-  }, [editorContent, isWrite]);
+  }, [initialLoad, fileId, saveContent]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
