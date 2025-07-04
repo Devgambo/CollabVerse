@@ -20,7 +20,7 @@ import {
 } from "@/src/components/ui/tooltip";
 import { ParamValue } from "next/dist/server/request/params";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 
@@ -491,13 +491,17 @@ let processFileRename: (
   extension?: string,
 ) => Promise<void>;
 
+
+
+
+//////////////////////MAIN COMPONENT
+
 export default function FileSystem({
   activeFileId,
   setActiveFileId,
   roomId,
 }: Props) {
   const [fileSystem, setFileSystem] = useState<FileSample[]>([]);
-  const [fetchingFiles, setFetchingFiles] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeOperation, setActiveOperation] = useState<FileOperation | null>(
     null,
@@ -507,41 +511,19 @@ export default function FileSystem({
   const createFileOrFolder = useMutation(api.fileSystem.createFileOrFolder);
   const updateFileOrFolder = useMutation(api.fileSystem.updateFileOrFolder);
   const deleteFileOrFolder = useMutation(api.fileSystem.deleteFileOrFolder);
-
-  const fetchFilesFromServer = async () => {
-    try {
-      setFetchingFiles(true);
-      const response = await fetch(`/api/rooms/${roomId}/fileSystem`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setFileSystem(data.files || []);
-    } catch (error) {
-      toast.error("Failed to load files");
-      console.error("Error fetching files:", error);
-    } finally {
-      setFetchingFiles(false);
-    }
+  const filesList = useQuery(api.fileSystem.getFilesFolders, { roomId: roomId as string }) as {
+      files: FileSample[]
   };
 
+  console.log(filesList);
+
+  // fileSystem will be undefined initially while loading, then real data
   useEffect(() => {
-    let ignore = false;
-
-    const loadFiles = async () => {
-      if (ignore) return;
-      await fetchFilesFromServer();
-    };
-
-    loadFiles();
-
-    return () => {
-      ignore = true;
-    };
-  }, [roomId]);
-
+    if (filesList) {
+      setFileSystem(filesList.files || []);
+    }
+  }, [filesList]);
+  
   // Define the API operation handlers for use in child components
   processFileCreate = async (
     parentId: string | null,
@@ -569,7 +551,7 @@ export default function FileSystem({
 
       toast.success("File created successfully", { id: toastId });
       setActiveOperation(null);
-      await fetchFilesFromServer();
+      // await fetchFilesFromServer();
     } catch (error) {
       console.error("Error creating file:", error);
       toast.error("Failed to create file");
@@ -599,7 +581,6 @@ export default function FileSystem({
 
       toast.success("Folder created successfully", { id: toastId });
       setActiveOperation(null);
-      await fetchFilesFromServer();
     } catch (error) {
       console.error("Error creating folder:", error);
       toast.error("Failed to create folder");
@@ -632,7 +613,6 @@ export default function FileSystem({
 
       toast.success("Item renamed successfully", { id: toastId });
       setActiveOperation(null);
-      await fetchFilesFromServer();
     } catch (error) {
       console.error("Error renaming item:", error);
       toast.error("Failed to rename item");
@@ -691,7 +671,7 @@ export default function FileSystem({
       }
 
       setActiveOperation(null);
-      await fetchFilesFromServer();
+      // await fetchFilesFromServer();
     } catch (error) {
       console.error("Error deleting item:", error);
       toast.error("Failed to delete item");
@@ -765,17 +745,6 @@ export default function FileSystem({
       </button>
     </div>
   );
-
-  if (fetchingFiles) {
-    return (
-      <div className="max-h-[80vh] overflow-auto bg-slate-900/50 border border-slate-800 rounded-lg p-4">
-        <div className="flex items-center justify-center py-8 text-slate-400">
-          <Loader2 className="h-5 w-5 animate-spin mr-2" />
-          <span>Loading files...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-h-[80vh] overflow-auto bg-slate-900/50 border border-slate-800 rounded-lg p-4">

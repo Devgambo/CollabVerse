@@ -165,65 +165,14 @@ export const getFileContent = query({
     const content = await ctx.db
       .query("fileContent")
       .filter((eachContent) =>
-        eachContent.eq(eachContent.field("fileId"), fileId),
-      );
-    if (!content) {
-      return { success: false, error: "File constent not found" };
+        eachContent.eq(eachContent.field("fileId"), fileId))
+      .collect()
+
+    if (content.length === 0) {
+      return { success: false, error: "File content not found" };
     }
-
-    return content;
-  },
-});
-
-// Create file content
-const createFileContent = mutation({
-  args: {
-    fileId: v.id("filesystem"),
-    content: v.optional(v.string()),
-    language: v.optional(v.string()),
-    isExecutable: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const contentId = await ctx.db.insert("fileContent", {
-      fileId: args.fileId,
-      content: args.content,
-      language: args.language,
-      isExecutable: args.isExecutable,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-
-    return { success: true, contentId };
-  },
-});
-
-// Update file content
-const updateFileContent = mutation({
-  args: {
-    fileContentId: v.id("fileContent"),
-    content: v.optional(v.string()),
-    language: v.optional(v.string()),
-    output: v.optional(v.string()),
-    error: v.optional(v.string()),
-    executionTime: v.optional(v.number()),
-    isExecutable: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const updateData: any = {
-      updatedAt: Date.now(),
-    };
-
-    if (args.content !== undefined) updateData.content = args.content;
-    if (args.language !== undefined) updateData.language = args.language;
-    if (args.output !== undefined) updateData.output = args.output;
-    if (args.error !== undefined) updateData.error = args.error;
-    if (args.executionTime !== undefined)
-      updateData.executionTime = args.executionTime;
-    if (args.isExecutable !== undefined)
-      updateData.isExecutable = args.isExecutable;
-
-    await ctx.db.patch(args.fileContentId, updateData);
-    return { success: true };
+    
+    return { success: true, data: content };
   },
 });
 
@@ -283,7 +232,7 @@ export const saveFileContent = mutation({
         output: args.output,
         error: args.error,
         executionTime: args.executionTime,
-        isExecutable: args.isExecutable,
+        // isExecutable: args.isExecutable,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });

@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useState,
+  useRef,
   Dispatch,
   SetStateAction,
 } from "react";
@@ -16,6 +17,9 @@ import { Awareness } from "y-protocols/awareness";
 import { Cursors } from "./Cursors";
 import { Toolbar } from "@/src/app/(core)/home/[roomId]/room/components/Toolbar";
 import { CODE_SNIPPETS } from "@/src/lib/constants";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 
 type CollaborativeEditorProps = {
   leftSide: boolean;
@@ -24,6 +28,19 @@ type CollaborativeEditorProps = {
   setRightSide: Dispatch<SetStateAction<boolean>>;
   fileId: string;
   permissions: string[];
+};
+
+export type sampleFileContent = {
+  _id: string;
+  _creationTime: number;
+  fileId: string;
+  content?: string;
+  language?: string;
+  output?: string;
+  error?: string;
+  executionTime?: number;
+  createdAt: number;
+  updatedAt: number;
 };
 
 export function CollaborativeEditor({
@@ -40,65 +57,129 @@ export function CollaborativeEditor({
   const [isWrite, setIsWrite] = useState<boolean>(false);
   const [codeLanguage, setCodeLanguage] = useState("javascript");
   const [selectedTheme, setSelectedTheme] = useState("vs-dark");
-  const [updatedCode, setUpdatedCode] = useState(
-    "//Select a file to start coding..!",
+  const [editorContent, setEditorContent] = useState<string>("");
+  
+  // Keep track of the previous fileId to handle file switching
+  const prevFileIdRef = useRef<string>("");
+  const prevContentRef = useRef<string>("");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Queries and mutations
+  const fetchContent = useQuery(api.fileSystem.getFileContent, { fileId });
+  const saveContent = useMutation(api.fileSystem.saveFileContent);
+
+  // Debounced save function
+  const debouncedSave = useCallback(
+    (content: string, language: string, targetFileId: string) => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      saveTimeoutRef.current = setTimeout(async () => {
+        try {
+          await saveContent({
+            fileId: targetFileId,
+            content,
+            language,
+          });
+        } catch (error) {
+          console.error("Failed to save content:", error);
+          toast.error("Failed to save file content");
+        }
+      }, 1000); // 1 second debounce
+    },
+    [saveContent]
   );
-  const themes = [
-    { name: "Dark", value: "vs-dark" },
-    { name: "Light", value: "light" },
-    { name: "High Contrast", value: "hc-black" },
-  ];
 
-  const fetchFileContent = async () => {
-    
-  };
-
+  // Handle file switching - save current content and load new content
   useEffect(() => {
+    const handleFileSwitch = async () => {
+      // If we're switching files and have previous content to save
+      if (prevFileIdRef.current && 
+          prevFileIdRef.current !== fileId && 
+          prevContentRef.current) {
+        try {
+          // Save the previous file's content immediately
+          await saveContent({
+            fileId: prevFileIdRef.current,
+            content: prevContentRef.current,
+            language: codeLanguage,
+          });
+        } catch (error) {
+          console.error("Failed to save previous file:", error);
+          toast.error("Failed to save previous file");
+        }
+      }
+
+      // Update the previous file reference
+      prevFileIdRef.current = fileId;
+    };
+
     if (fileId) {
-      //file Id --> filecontent and fill content
-      fetchFileContent();
+      handleFileSwitch();
     }
-  }, [fileId]);
+  }, [fileId, saveContent, codeLanguage]);
 
+  // Load file content when fileId changes or content is fetched
   useEffect(() => {
-    if (permissions.includes("write")) {
-      setIsWrite(true);
-    } else {
-      setIsWrite(false);
+    if (fetchContent?.success && Array.isArray(fetchContent.data) && fetchContent.data.length > 0) {
+      const fileContentData = fetchContent.data[0] as sampleFileContent;
+      const content = fileContentData.content || "// Start your coding journey";
+      const language = fileContentData.language || "javascript";
+      
+      setEditorContent(content);
+      setCodeLanguage(language);
+      prevContentRef.current = content;
+      
+      // Update editor content if editor is ready
+      if (editorRef && editorRef.getValue() !== content) {
+        editorRef.setValue(content);
+      }
+    } else if (fetchContent?.success === false) {
+      // File has no content yet, set default
+      const defaultContent = CODE_SNIPPETS[codeLanguage as keyof typeof CODE_SNIPPETS] || "// Start your coding journey";
+      setEditorContent(defaultContent);
+      prevContentRef.current = defaultContent;
+      
+      if (editorRef) {
+        editorRef.setValue(defaultContent);
+      }
     }
+  }, [fetchContent, fileId, codeLanguage, editorRef]);
 
-    // Update editor options when isWrite changes
+  // Handle editor content changes
+  const handleEditorChange = useCallback((value: string | undefined) => {
+    if (value !== undefined) {
+      setEditorContent(value);
+      prevContentRef.current = value;
+      
+      // Only save if user has write permissions
+      if (isWrite && fileId) {
+        debouncedSave(value, codeLanguage, fileId);
+      }
+    }
+  }, [isWrite, fileId, codeLanguage, debouncedSave]);
+
+  // Handle permissions
+  useEffect(() => {
+    const hasWritePermission = permissions.includes("write");
+    setIsWrite(hasWritePermission);
+
+    // Update editor options when permissions change
     if (editorRef) {
       editorRef.updateOptions({
-        readOnly: !isWrite,
+        readOnly: !hasWritePermission,
       });
     }
-  }, [permissions, isWrite, editorRef]);
+  }, [permissions, editorRef]);
 
-  const onSelect = (codeLanguage: string) => {
-    setCodeLanguage(codeLanguage);
-  };
-
-  const handleEditorChange = (value: string | undefined) => {
-    setUpdatedCode(value || "");
-    //TODO: autosave to persist the data
-  };
-
-  const autoSaveFile = async (content: string) => {
-    // if (!file?.id || !file?.workspaceId) return;
-
-    try {
-      //TODO: implement autosave
-    } catch (error) {
-      console.error("Error auto-saving file:", error);
-    }
-  };
-
+  // Handle Monaco binding for collaborative editing
   useEffect(() => {
     let binding: MonacoBinding;
-    if (editorRef) {
+    
+    if (editorRef && provider) {
       const yDoc = provider.getYDoc();
-      const yText = yDoc.getText("monaco");
+      const yText = yDoc.getText(`monaco-${fileId}`); // Use fileId specific text..So that it can have seperate space
 
       binding = new MonacoBinding(
         yText,
@@ -111,14 +192,27 @@ export function CollaborativeEditor({
     return () => {
       binding?.destroy();
     };
-  }, [editorRef, room]);
+  }, [editorRef, provider, fileId]);
 
-  const handleOnMount = useCallback((e: editor.IStandaloneCodeEditor) => {
-    setEditorRef(e);
 
-    // Configure editor theme and options after mount
-    e.updateOptions({
-      theme: "vs-dark",
+  // // Clear editor when fileId changes
+  // useEffect(() => {
+  //   if (editorRef && fileId) {
+  //     clearEditor();
+  //   }
+  // }, [fileId, editorRef, clearEditor]);
+
+  // Handle editor mount
+  const handleOnMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
+    setEditorRef(editor);
+
+    // Set initial content
+    if (editorContent) {
+      editor.setValue(editorContent);
+    }
+
+    // Configure editor options
+    editor.updateOptions({
       readOnly: !isWrite,
       fontSize: 14,
       fontFamily: "JetBrains Mono, Consolas, Monaco, monospace",
@@ -140,7 +234,22 @@ export function CollaborativeEditor({
         indentation: true,
       },
     });
+  }, [editorContent, isWrite]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, []);
+
+  const themes = [
+    { name: "Dark", value: "vs-dark" },
+    { name: "Light", value: "light" },
+    { name: "High Contrast", value: "hc-black" },
+  ];
 
   return (
     <div className="h-full w-full bg-[#0d1117] flex flex-col">
@@ -172,12 +281,7 @@ export function CollaborativeEditor({
           width="100%"
           theme={selectedTheme}
           language={codeLanguage}
-          defaultValue={
-            CODE_SNIPPETS[codeLanguage as keyof typeof CODE_SNIPPETS] ||
-            CODE_SNIPPETS.javascript
-          }
-          value={updatedCode}
-          // onMount={onMount}
+          value={editorContent}
           onChange={handleEditorChange}
           options={{
             tabSize: 2,
