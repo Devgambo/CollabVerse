@@ -2,7 +2,7 @@ import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { Webhook } from "svix";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { api, internal } from "./_generated/api";
+import { api } from "./_generated/api";
 
 const http = httpRouter();
 
@@ -19,7 +19,7 @@ http.route({
       const { id, email_addresses, first_name, last_name } = event.data;
 
       const email = email_addresses[0].email_address;
-      const name = `${first_name || ""} ${last_name || ""}`.trim();
+      // const name = `${first_name || ""} ${last_name || ""}`.trim();
       const username = `${event.data.username}`;
 
       try {

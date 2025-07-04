@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
@@ -18,7 +18,6 @@ import {
   Loader2,
   PlusCircle,
   Clock,
-  Users,
   Trash2,
   Code2,
   Settings,
@@ -30,28 +29,25 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { animations } from "@/src/lib/design-system";
+import { Room } from "@/src/types/core_interface";
+
+interface RoomProps extends Room {
+  createdAt: number;
+  lastAccessedAt: number;
+}
 
 export default function HomePage() {
   const [roomName, setRoomName] = useState<string>("");
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [filteredRooms, setFilteredRooms] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<RoomProps[]>([]);
+  const [filteredRooms, setFilteredRooms] = useState<RoomProps[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
-  const [filterType, _setFilterType] = useState<"all" | "owned" | "joined">(
-    "all",
-  );
+
   const router = useRouter();
 
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
-  useEffect(() => {
-    filterRooms();
-  }, [rooms, searchQuery, filterType]);
-
-  const filterRooms = () => {
+  // Wrapped filterRooms in useCallback to fix the ESLint warning
+  const filterRooms = useCallback(() => {
     let filtered = rooms;
 
     if (searchQuery) {
@@ -60,17 +56,10 @@ export default function HomePage() {
       );
     }
 
-    if (filterType !== "all") {
-      filtered = filtered.filter((room) => {
-        // Add logic based on user ID when available
-        return true;
-      });
-    }
-
     setFilteredRooms(filtered);
-  };
+  }, [rooms, searchQuery]);
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/rooms");
@@ -86,7 +75,15 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
+
+  useEffect(() => {
+    filterRooms();
+  }, [filterRooms]); // Now filterRooms is memoized, so this won't cause infinite re-renders
 
   const handleRoomCreation = async () => {
     if (!roomName.trim()) {
@@ -158,6 +155,7 @@ export default function HomePage() {
     }
   };
 
+  // Rest of your JSX remains exactly the same...
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Header Section */}
@@ -340,10 +338,6 @@ export default function HomePage() {
                                       {new Date(
                                         room?.createdAt || Date.now(),
                                       ).toLocaleDateString()}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Users className="w-3 h-3" />
-                                      {room?.users?.length || 0} members
                                     </span>
                                   </div>
                                 </div>

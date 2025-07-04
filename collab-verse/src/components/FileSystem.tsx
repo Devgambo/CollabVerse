@@ -172,8 +172,7 @@ const DeleteConfirmation = ({
   onConfirm: () => void;
   onCancel: () => void;
 }) => {
-  const displayName = getFullFileName(item);
-
+  console.log("Deleted", item);
   return (
     <div className="p-3 bg-slate-800 border border-slate-700 rounded-md mb-2">
       {/* <div className="flex items-center gap-2 mb-3">

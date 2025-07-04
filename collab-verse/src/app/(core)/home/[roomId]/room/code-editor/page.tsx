@@ -3,12 +3,7 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Loader2,
-  MessageCircleDashedIcon,
-  MessageCircleIcon,
-  Text,
-} from "lucide-react";
+import { Loader2, MessageCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import ChatBox from "@/src/components/code-editor-components/ChatBox";
@@ -62,6 +57,7 @@ export default function CodeEditorPage() {
         setIsLoading(false);
       } catch (error) {
         toast.error("Failed to verify room access");
+        console.log(error);
         router.push("/home");
       }
     };
@@ -107,8 +103,7 @@ export default function CodeEditorPage() {
                   <div className="h-px bg-gray-700/50"></div>
                 </div>
                 <div className="h-[calc(100%-2rem)] overflow-y-auto">
-                  {/*  TODO : Fix the expand thing + delete message to show users */}
-                  that please delete all children
+                  {/*  TODO : Fix the expand thing + delete message to show users that please delete all children */}
                   <FileSystem
                     roomId={roomId}
                     activeFileId={fileId}

@@ -5,13 +5,12 @@ import {
   ClientSideSuspense,
   LiveblocksProvider,
 } from "@liveblocks/react";
-import { LiveMap, LiveList } from "@liveblocks/client";
+import { LiveMap } from "@liveblocks/client";
 import { Id } from "@/convex/_generated/dataModel";
 
 interface RoomDataProps {
   roomId: Id<"rooms">;
   activeFileId: Id<"filesystem"> | null;
-  whiteboard: string[];
 }
 
 export default function Providers({
@@ -33,7 +32,6 @@ export default function Providers({
         }}
         initialStorage={{
           files: new LiveMap(), // will hydrate later
-          whiteboard: new LiveList(roomData.whiteboard || []),
         }}
       >
         <ClientSideSuspense fallback={<div>Loading...</div>}>

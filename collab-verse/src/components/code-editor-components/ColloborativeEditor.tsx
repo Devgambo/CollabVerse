@@ -56,7 +56,7 @@ export function CollaborativeEditor({
   const [editorRef, setEditorRef] = useState<editor.IStandaloneCodeEditor>();
   const [isWrite, setIsWrite] = useState<boolean>(false);
   const [codeLanguage, setCodeLanguage] = useState<string>("typescript"); // Default to typescript
-  const [selectedTheme, setSelectedTheme] = useState("vs-dark");
+  const selectedTheme = "vs-dark";
   const [editorContent, setEditorContent] = useState<string>("");
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
 
@@ -271,7 +271,6 @@ export function CollaborativeEditor({
     }
   }, [initialLoad, fileId, saveContent]);
 
-  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
@@ -280,11 +279,11 @@ export function CollaborativeEditor({
     };
   }, []);
 
-  const themes = [
-    { name: "Dark", value: "vs-dark" },
-    { name: "Light", value: "light" },
-    { name: "High Contrast", value: "hc-black" },
-  ];
+  // const themes = [
+  //   { name: "Dark", value: "vs-dark" },
+  //   { name: "Light", value: "light" },
+  //   { name: "High Contrast", value: "hc-black" },
+  // ];
 
   return (
     <div className="h-full w-full bg-[#0d1117] flex flex-col">

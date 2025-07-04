@@ -71,7 +71,7 @@ function RedirectToDashboard() {
   );
 }
 
-export function LandingPage() {
+function LandingPage() {
   const features = [
     {
       icon: <Zap className="w-6 h-6" />,

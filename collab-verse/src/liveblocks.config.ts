@@ -9,7 +9,6 @@ declare global {
 
     Storage: {
       files: LiveMap<string, string>;
-      whiteboard: LiveList<any>;
     };
 
     UserMeta: {
@@ -45,7 +44,7 @@ declare global {
 
 import { createClient } from "@liveblocks/client";
 import { createRoomContext } from "@liveblocks/react";
-import { LiveMap, LiveList } from "@liveblocks/client";
+import { LiveMap } from "@liveblocks/client";
 
 // Types for Liveblocks awareness
 export type UserAwareness = {
@@ -67,7 +66,6 @@ type Presence = {
 // Define storage schema if needed
 type Storage = {
   files: LiveMap<string, string>;
-  whiteboard: LiveList<any>;
 };
 
 export const client = createClient({

@@ -53,7 +53,7 @@ export default defineSchema({
 
   roomContent: defineTable({
     roomId: v.id("rooms"),
-    liveblockWhiteboardId: v.optional(v.string()), // e.g. "room:<roomId>:whiteboard"   ??
+    liveblockWhiteboardId: v.optional(v.string()),
     activeFileId: v.optional(v.id("filesystem")),
     settings: v.optional(
       v.object({
