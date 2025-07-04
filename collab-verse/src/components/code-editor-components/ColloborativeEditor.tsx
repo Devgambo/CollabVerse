@@ -15,7 +15,7 @@ import { editor } from "monaco-editor";
 import { MonacoBinding } from "y-monaco";
 import { Awareness } from "y-protocols/awareness";
 import { Cursors } from "./Cursors";
-import { Toolbar } from "@/src/app/(core)/home/[roomId]/room/components/Toolbar";
+import { Toolbar } from "@/src/components/code-editor-components/Toolbar";
 import { CODE_SNIPPETS } from "@/src/lib/constants";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";

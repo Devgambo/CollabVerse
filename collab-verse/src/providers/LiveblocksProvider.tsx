@@ -3,11 +3,16 @@
 import {
   RoomProvider,
   ClientSideSuspense,
-  useRoom,
   LiveblocksProvider,
 } from "@liveblocks/react";
 import { LiveMap, LiveList } from "@liveblocks/client";
-import { useEffect } from "react";
+import { Id } from "@/convex/_generated/dataModel";
+
+interface RoomDataProps {
+  roomId: Id<"rooms">;
+  activeFileId: Id<"filesystem"> | null;
+  whiteboard: string[];
+}
 
 export default function Providers({
   children,
@@ -16,13 +21,12 @@ export default function Providers({
 }: {
   children: React.ReactNode;
   roomId: string;
-  roomData: any;
+  roomData: RoomDataProps;
 }) {
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider
         id={roomId}
-        // authEndpoint="/api/liveblocks-auth"
         initialPresence={{
           cursor: null,
           selectedFileId: roomData.activeFileId,
@@ -33,42 +37,9 @@ export default function Providers({
         }}
       >
         <ClientSideSuspense fallback={<div>Loading...</div>}>
-          <Hydrator fileSnapshots={roomData.fileSnapshots} />
           {children}
         </ClientSideSuspense>
       </RoomProvider>
     </LiveblocksProvider>
   );
-}
-
-function Hydrator({
-  fileSnapshots,
-}: {
-  fileSnapshots: Record<string, string> | undefined;
-}) {
-  const room = useRoom();
-
-  useEffect(() => {
-    if (!fileSnapshots) return;
-
-    let isMounted = true;
-
-    room.getStorage().then(({ root }) => {
-      if (!isMounted) return;
-
-      const files = root.get("files") as LiveMap<string, string>;
-      if (!files) return;
-
-      for (const [fileId, code] of Object.entries(fileSnapshots)) {
-        if (!files.has(fileId)) {
-          files.set(fileId, code);
-        }
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fileSnapshots, room]);
-  return null;
 }

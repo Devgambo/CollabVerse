@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
-import Providers from "./LiveblocksProvider";
+import Providers from "@/src/providers/LiveblocksProvider";
 
 export default async function RoomLayout({
   children,

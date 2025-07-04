@@ -2,7 +2,6 @@
 
 import {
   Code,
-  HomeIcon,
   LinkIcon,
   LucidePanelsRightBottom,
   LucideSwitchCamera,
@@ -21,9 +20,9 @@ import { Dock, DockIcon } from "@/src/components/magicui/dock";
 export type IconProps = React.HTMLAttributes<SVGElement>;
 
 import { UserButton, useUser } from "@clerk/nextjs";
-import { useOthers, useSelf } from "@liveblocks/react/suspense";
+import { useOthers } from "@liveblocks/react/suspense";
 import { toast } from "sonner";
-import RoomSettingsModal from "./RoomSettingsModal";
+import RoomSettingsModal from "./code-editor-components/RoomSettingsModal";
 
 type NavbarProps = {
   roomId: string;

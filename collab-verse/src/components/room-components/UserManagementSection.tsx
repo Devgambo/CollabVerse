@@ -17,13 +17,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/src/components/ui/card";
 import { Switch } from "@/src/components/ui/switch";
 import {
   Select,
@@ -36,17 +29,16 @@ import { Badge } from "@/src/components/ui/badge";
 import { Separator } from "@/src/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/src/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
+import { RoomUser } from "@/src/types/core_interface";
 
 interface UserManagementSectionProps {
-  room: any;
   roomId: string;
-  roomUsers: any[] | null;
+  roomUsers: RoomUser[] | null;
   onUpdate: (roomId: string) => void;
   onGoToWorkspace: () => void;
 }
 
 export default function UserManagementSection({
-  room,
   roomUsers,
   roomId,
   onUpdate,

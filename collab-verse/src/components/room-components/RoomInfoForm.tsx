@@ -15,13 +15,6 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/src/components/ui/card";
 import { Switch } from "@/src/components/ui/switch";
 import {
   Select,
@@ -32,9 +25,10 @@ import {
 } from "@/src/components/ui/select";
 import { Badge } from "@/src/components/ui/badge";
 import { motion } from "framer-motion";
+import { RoomData } from "@/src/types/funciton_interface";
 
 interface RoomInfoFormProps {
-  room: any;
+  room: RoomData | null;
   roomId: string;
   onUpdate: (roomId: string) => void;
 }

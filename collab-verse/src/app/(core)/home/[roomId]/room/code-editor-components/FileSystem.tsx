@@ -2,16 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { File, Folder, Tree } from "@/src/components/magicui/file-tree";
-import {
-  FolderPlus,
-  Trash2,
-  Edit2,
-  FileText,
-  Check,
-  X,
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
+import { FolderPlus, Trash2, Edit2, FileText, Check, X } from "lucide-react";
 import { TooltipProvider } from "@/src/components/ui/tooltip";
 import {
   Tooltip,
@@ -198,7 +189,7 @@ const DeleteConfirmation = ({
         </span>
       </p> */}
       <div>Deleting</div>
-      {/* <div className="flex justify-end gap-2">
+      <div className="flexi hidden justify-end gap-2">
         <button
           onClick={onCancel}
           className="px-3 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600 text-white"
@@ -211,7 +202,7 @@ const DeleteConfirmation = ({
         >
           Delete
         </button>
-      </div> */}
+      </div>
     </div>
   );
 };

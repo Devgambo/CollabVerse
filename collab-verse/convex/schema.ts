@@ -53,7 +53,6 @@ export default defineSchema({
 
   roomContent: defineTable({
     roomId: v.id("rooms"),
-    //?????
     liveblockWhiteboardId: v.optional(v.string()), // e.g. "room:<roomId>:whiteboard"   ??
     activeFileId: v.optional(v.id("filesystem")),
     settings: v.optional(
@@ -63,7 +62,7 @@ export default defineSchema({
         tabSize: v.optional(v.number()),
       }),
     ),
-    version: v.number(), //inc after every save (1,2,3,...)
+    version: v.number(),
     savedAt: v.number(),
     autoSaveEnabled: v.optional(v.boolean()),
   }).index("by_room", ["roomId"]),

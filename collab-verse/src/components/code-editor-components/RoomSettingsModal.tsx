@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  X,
-  Plus,
-  UserMinus,
-  User,
-  InfoIcon,
-  Users,
-  Settings,
-  Shield,
-} from "lucide-react";
+import { User, InfoIcon, Users, Settings, Shield, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,

@@ -11,16 +11,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
-import ChatBox from "../components/ChatBox";
-import FileSystem from "../components/FileSystem";
-import OutputBox from "../components/OutputBox";
+import ChatBox from "@/src/components/code-editor-components/ChatBox";
+import FileSystem from "@/src/components/FileSystem";
+import OutputBox from "@/src/components/OutputBox";
 import { cn } from "@/src/lib/utils";
 
 const CollaborativeEditorWithNoSSR = dynamic(
   () =>
-    import(
-      "@/src/app/(core)/home/[roomId]/room/components/ColloborativeEditor"
-    ).then((mod) => mod.CollaborativeEditor),
+    import("@/src/components/code-editor-components/ColloborativeEditor").then(
+      (mod) => mod.CollaborativeEditor,
+    ),
   { ssr: false },
 );
 
@@ -32,11 +32,11 @@ export default function CodeEditorPage() {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { user, isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
   const [chatOpen, setChatOpen] = useState<boolean>(true);
 
   const [fileId, setFileId] = useState<string>("");
-  
+
   //TODO:fetching the messages with respect to the room-id
   useEffect(() => {
     const checkAccess = async () => {
@@ -107,6 +107,8 @@ export default function CodeEditorPage() {
                   <div className="h-px bg-gray-700/50"></div>
                 </div>
                 <div className="h-[calc(100%-2rem)] overflow-y-auto">
+                  {/*  TODO : Fix the expand thing + delete message to show users */}
+                  that please delete all children
                   <FileSystem
                     roomId={roomId}
                     activeFileId={fileId}

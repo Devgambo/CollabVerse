@@ -1,6 +1,5 @@
-import { Outdent, SidebarClose, SidebarIcon } from "lucide-react";
+import { SidebarClose, SidebarIcon } from "lucide-react";
 import { editor } from "monaco-editor";
-import * as Y from "yjs";
 import { Dispatch, SetStateAction } from "react";
 
 type Props = {

@@ -19,7 +19,6 @@ import {
   PlusCircle,
   Clock,
   Users,
-  ArrowRight,
   Trash2,
   Code2,
   Settings,
@@ -27,12 +26,10 @@ import {
   Lock,
   Unlock,
   Search,
-  Filter,
   RefreshCw,
-  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { designSystem, animations } from "@/src/lib/design-system";
+import { animations } from "@/src/lib/design-system";
 
 export default function HomePage() {
   const [roomName, setRoomName] = useState<string>("");
@@ -41,7 +38,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
-  const [filterType, setFilterType] = useState<"all" | "owned" | "joined">(
+  const [filterType, _setFilterType] = useState<"all" | "owned" | "joined">(
     "all",
   );
   const router = useRouter();
@@ -135,6 +132,7 @@ export default function HomePage() {
   };
 
   const deleteRoom = async (roomId: string, ownerId: string) => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/rooms", {
         method: "DELETE",
@@ -155,6 +153,8 @@ export default function HomePage() {
     } catch (err) {
       console.error(err);
       toast.error("Network error. Could not connect to the server.");
+    } finally {
+      setIsLoading(false);
     }
   };
 

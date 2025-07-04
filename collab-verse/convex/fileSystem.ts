@@ -251,24 +251,3 @@ export const saveFileContent = mutation({
     }
   },
 });
-
-// Delete file content
-export const deleteFileContent = mutation({
-  args: {
-    fileId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const id = ctx.db.normalizeId("filesystem", args.fileId);
-    if (!id) return { success: false, error: "Invalid file ID" };
-
-    const content = await ctx.db
-      .query("fileContent")
-      .withIndex("by_fileId", (q) => q.eq("fileId", id))
-      .first();
-
-    if (!content) return { success: false, error: "Content not found" };
-
-    await ctx.db.delete(content._id);
-    return { success: true };
-  },
-});
