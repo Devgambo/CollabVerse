@@ -1,4 +1,4 @@
-import { SidebarClose, SidebarIcon } from "lucide-react";
+import { Play, SidebarClose, SidebarIcon } from "lucide-react";
 import { editor } from "monaco-editor";
 import { Dispatch, SetStateAction } from "react";
 
@@ -8,6 +8,7 @@ type Props = {
   rightSide: boolean;
   setLeftSide: Dispatch<SetStateAction<boolean>>;
   setRightSide: Dispatch<SetStateAction<boolean>>;
+  handelExecution: () => void;
 };
 
 export function Toolbar({
@@ -16,7 +17,18 @@ export function Toolbar({
   rightSide,
   setLeftSide,
   setRightSide,
+  handelExecution,
+
 }: Props) {
+
+
+  const handelClick = ()=>{
+    if(!rightSide){
+      setRightSide(!rightSide)
+    }
+    handelExecution();
+  }
+
   return (
     <div className="flex gap-1 justify-between align-middle items-center bg-[#1c2128] border-b border-gray-700/50 px-3 py-2">
       <div className="flex gap-1">
@@ -54,14 +66,14 @@ export function Toolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500">
-          {leftSide && rightSide
-            ? "Both panels open"
-            : leftSide
-              ? "Left panel open"
-              : rightSide
-                ? "Right panel open"
-                : "Full editor"}
+        <span className="">
+          <button
+          onClick={()=>{
+            handelClick()
+          }}
+          className="transition-colors duration-200 hover:bg-blue-600/30 text-xs flex items-center gap-1 p-2 px-2 border-[1px] rounded-2xl">
+            Run <Play className="size-4"/> 
+          </button>
         </span>
 
         <div className="w-px h-6 bg-gray-600/50"></div>

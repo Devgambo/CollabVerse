@@ -1,7 +1,16 @@
-import React from "react";
+import React from 'react'
 
-function OutputBox() {
-  return <div className="bg-black">Output</div>;
+interface Props {
+  output: string;
 }
 
-export default OutputBox;
+function OutputBox({output}: Props) {
+
+  return (
+    <div className=' text-white text-xs font-sans'>
+      {output}
+    </div>
+  )
+}
+
+export default OutputBox

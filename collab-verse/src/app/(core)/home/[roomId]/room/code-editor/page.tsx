@@ -30,7 +30,9 @@ export default function CodeEditorPage() {
   const { isSignedIn, isLoaded } = useUser();
   const [chatOpen, setChatOpen] = useState<boolean>(true);
 
+
   const [fileId, setFileId] = useState<string>("");
+  const [output, setOutput] = useState<string>("");
 
   //TODO:fetching the messages with respect to the room-id
   useEffect(() => {
@@ -126,6 +128,7 @@ export default function CodeEditorPage() {
               setRightSide={setRightSide}
               fileId={fileId}
               permissions={permissions}
+              setOutput={setOutput}
             />
           </div>
         </div>
@@ -152,7 +155,8 @@ export default function CodeEditorPage() {
                   <div className="h-px bg-gray-700/50"></div>
                 </div>
                 <div className="h-[calc(100%-2rem)] overflow-y-auto">
-                  <OutputBox />
+                  <OutputBox
+                    output={output} />
                 </div>
               </div>
             )}

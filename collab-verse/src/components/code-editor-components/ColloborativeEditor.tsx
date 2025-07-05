@@ -16,7 +16,7 @@ import { MonacoBinding } from "y-monaco";
 import { Awareness } from "y-protocols/awareness";
 import { Cursors } from "./Cursors";
 import { Toolbar } from "@/src/components/code-editor-components/Toolbar";
-import { CODE_SNIPPETS } from "@/src/lib/constants";
+import { CODE_SNIPPETS, LANGUAGE_VERSIONS } from "@/src/lib/constants";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ type CollaborativeEditorProps = {
   setRightSide: Dispatch<SetStateAction<boolean>>;
   fileId: string;
   permissions: string[];
+  setOutput: Dispatch<SetStateAction<string>>;
 };
 
 export type sampleFileContent = {
@@ -35,7 +36,7 @@ export type sampleFileContent = {
   _creationTime: number;
   fileId: string;
   content?: string;
-  language?: string;
+  language: string;
   output?: string;
   error?: string;
   executionTime?: number;
@@ -50,23 +51,24 @@ export function CollaborativeEditor({
   setRightSide,
   fileId,
   permissions,
+  setOutput,
 }: CollaborativeEditorProps) {
   const room = useRoom();
   const provider = getYjsProviderForRoom(room);
   const [editorRef, setEditorRef] = useState<editor.IStandaloneCodeEditor>();
   const [isWrite, setIsWrite] = useState<boolean>(false);
-  const [codeLanguage, setCodeLanguage] = useState<string>("typescript"); // Default to typescript
+  const [codeLanguage, setCodeLanguage] = useState<string>("javascript");
+
+  //TODO: keep the theme in global state;
   const selectedTheme = "vs-dark";
   const [editorContent, setEditorContent] = useState<string>("");
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
+
 
   // Keep track of the previous fileId to handle file switching
   const prevFileIdRef = useRef<string>("");
   const prevContentRef = useRef<string>("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Store current language to ensure it doesn't change during saves
-  const fileLanguageRef = useRef<string>("typescript");
 
   // Queries and mutations
   const fetchContent = useQuery(api.fileSystem.getFileContent, { fileId });
@@ -85,7 +87,6 @@ export function CollaborativeEditor({
           await saveContent({
             fileId: targetFileId,
             content: content,
-            // Don't pass language here to avoid overwriting it
           });
         } catch (error) {
           console.error("Failed to save content:", error);
@@ -135,14 +136,20 @@ export function CollaborativeEditor({
       fetchContent.data.length > 0
     ) {
       const fileContentData = fetchContent.data[0] as sampleFileContent;
-      const content = fileContentData.content || "// Start your coding journey";
+      const content =
+        fileContentData.content ||
+        CODE_SNIPPETS[
+          fileContentData.language as keyof typeof CODE_SNIPPETS
+        ] ||
+        "// Start cooking...🔥";
 
       // Get language from file content data, with fallback to current language
-      const language = fileContentData.language || fileLanguageRef.current;
-      fileLanguageRef.current = language; // Store the language reference
+      const language = fileContentData.language;
 
       setEditorContent(content);
-      setCodeLanguage(language);
+      if (language !== codeLanguage) {
+        setCodeLanguage(language);
+      }
       prevContentRef.current = content;
 
       // Update editor content if editor is ready
@@ -152,7 +159,7 @@ export function CollaborativeEditor({
     } else if (fetchContent?.success === false) {
       // File has no content yet, set default
       const defaultContent =
-        CODE_SNIPPETS[fileLanguageRef.current as keyof typeof CODE_SNIPPETS] ||
+        CODE_SNIPPETS[codeLanguage as keyof typeof CODE_SNIPPETS] ||
         "// Start your coding journey";
       setEditorContent(defaultContent);
       prevContentRef.current = defaultContent;
@@ -161,7 +168,7 @@ export function CollaborativeEditor({
         editorRef.setValue(defaultContent);
       }
     }
-  }, [fetchContent, fileId, editorRef]);
+  }, [fetchContent, fileId, editorRef, codeLanguage]);
 
   // Handle editor content changes
   const handleEditorChange = useCallback(
@@ -250,27 +257,6 @@ export function CollaborativeEditor({
     [editorContent, isWrite],
   );
 
-  // Handle language changes - only for initial load
-  useEffect(() => {
-    if (initialLoad && fileId && fileLanguageRef.current) {
-      setInitialLoad(false);
-
-      // On initial load, update the file with the correct language
-      const updateLanguage = async () => {
-        try {
-          await saveContent({
-            fileId: fileId,
-            language: fileLanguageRef.current,
-          });
-        } catch (error) {
-          console.error("Failed to update language:", error);
-        }
-      };
-
-      updateLanguage();
-    }
-  }, [initialLoad, fileId, saveContent]);
-
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
@@ -278,6 +264,24 @@ export function CollaborativeEditor({
       }
     };
   }, []);
+
+  //handel code exucution with memo
+  const handelExecution = async () => {
+    const response = await fetch("https://emkc.org/api/v2/piston/execute",{
+      method:'POST',
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        language: codeLanguage,
+        version: LANGUAGE_VERSIONS[codeLanguage as keyof typeof LANGUAGE_VERSIONS],
+        files: [{ content: editorContent }],
+      }),
+    })
+
+    const data = await response.json();
+    setOutput(data.run.output);
+  };
 
   // const themes = [
   //   { name: "Dark", value: "vs-dark" },
@@ -298,6 +302,7 @@ export function CollaborativeEditor({
       <div className="flex-none">
         {editorRef && (
           <Toolbar
+            handelExecution={handelExecution}
             editor={editorRef}
             leftSide={leftSide}
             rightSide={rightSide}

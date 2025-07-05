@@ -533,6 +533,7 @@ export default function FileSystem({
       const language = mapExtensionToLanguage(extension);
       console.log(language);
 
+      //Fix: NO language feild in filesys
       await createFileOrFolder({
         name,
         roomId: roomId as string,
