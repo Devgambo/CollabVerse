@@ -1,14 +1,22 @@
 // Define Liveblocks types for your application
 // https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
+
+import { Point, Color, Layer } from "@/src/types/whiteboard";
+
 declare global {
   interface Liveblocks {
     Presence: {
-      cursor: { x: number; y: number } | null;
+      cursor: { x: number; y: number } | Point | null;
       selectedFileId: string | null;
+      selection: string[];
+      pencilDraft: [x: number, y: number, pressure: number][] | null;
+      penColor: Color | null;
     };
 
     Storage: {
       files: LiveMap<string, string>;
+      layers: LiveMap<string, LiveObject<Layer>>;
+      layerIds: LiveList<string>;
     };
 
     UserMeta: {
@@ -42,9 +50,13 @@ declare global {
   }
 }
 
-import { createClient } from "@liveblocks/client";
+import {
+  createClient,
+  LiveList,
+  LiveObject,
+  LiveMap,
+} from "@liveblocks/client";
 import { createRoomContext } from "@liveblocks/react";
-import { LiveMap } from "@liveblocks/client";
 
 // Types for Liveblocks awareness
 export type UserAwareness = {
@@ -59,13 +71,18 @@ export type AwarenessList = [number, { user: UserAwareness["user"] }][];
 
 // Define presence for collaboration features
 type Presence = {
-  cursor: { x: number; y: number } | null;
+  cursor: { x: number; y: number } | Point | null;
   selectedFileId: string | null;
+  selection: string[];
+  pencilDraft: [x: number, y: number, pressure: number][] | null;
+  penColor: Color | null;
 };
 
-// Define storage schema if needed
+// Define storage schema
 type Storage = {
   files: LiveMap<string, string>;
+  layers: LiveMap<string, LiveObject<Layer>>;
+  layerIds: LiveList<string>;
 };
 
 export const client = createClient({
@@ -79,4 +96,9 @@ export const {
   useOthers,
   useSelf,
   useStorage,
+  useMutation,
+  useHistory,
+  useCanUndo,
+  useCanRedo,
+  useOthersMapped,
 } = createRoomContext<Presence, Storage>(client);
