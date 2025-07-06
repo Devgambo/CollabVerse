@@ -28,7 +28,7 @@ export default function CodeEditorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { isSignedIn, isLoaded } = useUser();
-  const [chatOpen, setChatOpen] = useState<boolean>(true);
+  const [chatOpen, setChatOpen] = useState<boolean>(false);
 
 
   const [fileId, setFileId] = useState<string>("");

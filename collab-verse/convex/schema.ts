@@ -44,7 +44,12 @@ export default defineSchema({
   messages: defineTable({
     roomId: v.id("rooms"),
     userId: v.union(v.string(), v.null()), // null for AI
-    text: v.string(),
+    text: v.array(
+      v.object({
+        type: v.string(),
+        content: v.string(),
+      })
+    ),
     isAI: v.boolean(),
     replyToId: v.optional(v.id("messages")),
     createdAt: v.number(),
