@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  SignedIn,
-  SignedOut,
-  SignUpButton,
-  SignInButton,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignedOut, SignUpButton, SignInButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/src/components/ui/button";
@@ -21,52 +15,22 @@ import {
   Terminal,
   Palette,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
+  const user = useUser();
+  const router = useRouter();
+  useEffect(() => {
+    if (user) {
+      router.push("/home");
+    }
+  });
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      <SignedIn>
-        <RedirectToDashboard />
-      </SignedIn>
       <SignedOut>
         <LandingPage />
       </SignedOut>
-    </div>
-  );
-}
-
-function RedirectToDashboard() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <motion.div
-        className="text-center space-y-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <Code2 className="w-8 h-8 text-white" />
-        </div>
-        <h1 className="text-3xl font-bold">Welcome back!</h1>
-        <p className="text-slate-400 max-w-md">
-          Ready to continue your collaborative coding journey?
-        </p>
-        <div className="flex flex-row justify-center space-y-8">
-          <Link href="/home">
-            <Button
-              variant="ghost"
-              className="mx-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transform hover:scale-105 transition-all duration-200 shadow-lg shadow-blue-500/25"
-            >
-              Go to Dashboard
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
-          <div className="flex justify-center">
-            <div className="size-3 hover:scale-110">
-              <UserButton />
-            </div>
-          </div>
-        </div>
-      </motion.div>
     </div>
   );
 }
