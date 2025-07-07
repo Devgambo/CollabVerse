@@ -66,9 +66,7 @@ export function CollaborativeEditor({
   //TODO: keep the theme in global state;
   const selectedTheme = "vs-dark";
   // const [editorContent, setEditorContent] = useState<string>("");
-  const [initialLoad, setInitialLoad] = useState<boolean>(true);
-
-
+  // const [setInitialLoad] = useState<boolean>(true);
 
   // Keep track of the previous fileId to handle file switching
   const prevFileIdRef = useRef<string>("");
@@ -125,7 +123,7 @@ export function CollaborativeEditor({
 
       // Update the previous file reference
       prevFileIdRef.current = fileId;
-      setInitialLoad(true); // Mark as initial load for the new file
+      // setInitialLoad(true); // Mark as initial load for the new file
     };
 
     if (fileId) {
@@ -143,12 +141,9 @@ export function CollaborativeEditor({
       const fileContentData = fetchContent.data[0] as sampleFileContent;
       const content =
         fileContentData.content ||
-        CODE_SNIPPETS[
-          fileContentData.language as keyof typeof CODE_SNIPPETS
-        ] ||
+        CODE_SNIPPETS[fileContentData.language as keyof typeof CODE_SNIPPETS] ||
         "// Start cooking...🔥";
 
-      // Get language from file content data, with fallback to current language
       const language = fileContentData.language;
 
       setEditorContent(content);
@@ -157,12 +152,10 @@ export function CollaborativeEditor({
       }
       prevContentRef.current = content;
 
-      // Update editor content if editor is ready
       if (editorRef && editorRef.getValue() !== content) {
         editorRef.setValue(content);
       }
     } else if (fetchContent?.success === false) {
-      // File has no content yet, set default
       const defaultContent =
         CODE_SNIPPETS[codeLanguage as keyof typeof CODE_SNIPPETS] ||
         "// Start your coding journey";
@@ -173,22 +166,21 @@ export function CollaborativeEditor({
         editorRef.setValue(defaultContent);
       }
     }
-  }, [fetchContent, fileId, editorRef, codeLanguage]);
+  }, [fetchContent, fileId, editorRef, codeLanguage, setEditorContent]); // Added setEditorContent
 
-  // Handle editor content changes
+  // Handle editor content changes with proper dependencies
   const handleEditorChange = useCallback(
     (value: string | undefined) => {
       if (value !== undefined) {
         setEditorContent(value);
         prevContentRef.current = value;
 
-        // Only save if user has write permissions
         if (isWrite && fileId) {
           debouncedSave(value, fileId);
         }
       }
     },
-    [isWrite, fileId, debouncedSave],
+    [isWrite, fileId, debouncedSave, setEditorContent], // Added setEditorContent
   );
 
   // Handle permissions
@@ -272,17 +264,18 @@ export function CollaborativeEditor({
 
   //handel code exucution with memo
   const handelExecution = async () => {
-    const response = await fetch("https://emkc.org/api/v2/piston/execute",{
-      method:'POST',
+    const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         language: codeLanguage,
-        version: LANGUAGE_VERSIONS[codeLanguage as keyof typeof LANGUAGE_VERSIONS],
+        version:
+          LANGUAGE_VERSIONS[codeLanguage as keyof typeof LANGUAGE_VERSIONS],
         files: [{ content: editorContent }],
       }),
-    })
+    });
 
     const data = await response.json();
     setOutput(data.run.output);
@@ -422,3 +415,5 @@ export function CollaborativeEditor({
     </div>
   );
 }
+
+CollaborativeEditor.displayName = "CollaborativeEditor";

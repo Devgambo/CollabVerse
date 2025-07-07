@@ -4,7 +4,6 @@ import { LiveObject } from "@liveblocks/client";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Color,
-  Layer,
   LayerType,
   CanvasState,
   CanvasMode,
@@ -285,8 +284,8 @@ export default function Whiteboard() {
         cursor: point,
         pencilDraft:
           pencilDraft.length === 1 &&
-          pencilDraft[0][0] === point.x &&
-          pencilDraft[0][1] === point.y
+            pencilDraft[0][0] === point.x &&
+            pencilDraft[0][1] === point.y
             ? pencilDraft
             : [...pencilDraft, [point.x, point.y, e.pressure]],
       });
@@ -321,7 +320,7 @@ export default function Whiteboard() {
         current,
       });
       const ids = findIntersectingLayersWithRectangle(
-        layerIds,
+        layerIds ?? [],
         layers,
         origin,
         current,
@@ -409,7 +408,7 @@ export default function Whiteboard() {
   );
 
   const onPointerUp = useMutation(
-    ({}, e) => {
+    ({ }, e) => {
       const point = pointerEventToCanvasPoint(e, camera);
 
       if (
@@ -494,7 +493,7 @@ export default function Whiteboard() {
                 />
               )}
             <MultiplayerGuides />
-            {/* Drawing in progress. Still not commited to the storage. */}
+            {/* Drawing in progress. Still not committed to the storage. */}
             {pencilDraft != null && pencilDraft.length > 0 && (
               <Path
                 points={pencilDraft}

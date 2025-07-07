@@ -10,7 +10,6 @@ import ChatBox from "@/src/components/code-editor-components/ChatBox";
 import FileSystem from "@/src/components/FileSystem";
 import OutputBox from "@/src/components/OutputBox";
 import { cn } from "@/src/lib/utils";
-import { editor } from "monaco-editor";
 
 const CollaborativeEditorWithNoSSR = dynamic(
   () =>
