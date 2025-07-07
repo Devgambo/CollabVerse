@@ -1,19 +1,20 @@
 "use client";
 
 import {
-  RoomProvider,
   ClientSideSuspense,
-  LiveblocksProvider,
+  LiveblocksProvider as LBProvider,
 } from "@liveblocks/react";
-import { LiveMap } from "@liveblocks/client";
+import { LiveList, LiveMap } from "@liveblocks/client";
 import { Id } from "@/convex/_generated/dataModel";
+import { RoomProvider } from "@/src/liveblocks.config";
 
 interface RoomDataProps {
   roomId: Id<"rooms">;
   activeFileId: Id<"filesystem"> | null;
+  whiteboardId?: string;
 }
 
-export default function Providers({
+export default function LiveblocksProvider({
   children,
   roomId,
   roomData,
@@ -23,21 +24,26 @@ export default function Providers({
   roomData: RoomDataProps;
 }) {
   return (
-    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
+    <LBProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider
         id={roomId}
         initialPresence={{
           cursor: null,
           selectedFileId: roomData.activeFileId,
+          selection: [],
+          pencilDraft: null,
+          penColor: null,
         }}
         initialStorage={{
-          files: new LiveMap(), // will hydrate later
+          files: new LiveMap(),
+          layers: new LiveMap(),
+          layerIds: new LiveList([]),
         }}
       >
         <ClientSideSuspense fallback={<div>Loading...</div>}>
           {children}
         </ClientSideSuspense>
       </RoomProvider>
-    </LiveblocksProvider>
+    </LBProvider>
   );
 }
