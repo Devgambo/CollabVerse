@@ -168,7 +168,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="relative container mx-auto px-6 py-12">
           <div className="max-w-4xl text-4xl font-mono text-amber-100  ">
-            CollabVerse
+            Code Sync
           </div>
         </div>
       </motion.div>
