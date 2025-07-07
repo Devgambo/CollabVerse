@@ -1,13 +1,11 @@
 "use client";
 
 import { SignedOut, SignUpButton, SignInButton, useUser } from "@clerk/nextjs";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import {
-  Code2,
   Zap,
   Shield,
   Sparkles,
