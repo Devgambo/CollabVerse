@@ -29,6 +29,8 @@ type CollaborativeEditorProps = {
   fileId: string;
   permissions: string[];
   setOutput: Dispatch<SetStateAction<string>>;
+  editorContent: string;
+  setEditorContent: Dispatch<SetStateAction<string>>;
 };
 
 export type sampleFileContent = {
@@ -52,6 +54,8 @@ export function CollaborativeEditor({
   fileId,
   permissions,
   setOutput,
+  editorContent,
+  setEditorContent,
 }: CollaborativeEditorProps) {
   const room = useRoom();
   const provider = getYjsProviderForRoom(room);
@@ -61,8 +65,9 @@ export function CollaborativeEditor({
 
   //TODO: keep the theme in global state;
   const selectedTheme = "vs-dark";
-  const [editorContent, setEditorContent] = useState<string>("");
+  // const [editorContent, setEditorContent] = useState<string>("");
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
+
 
 
   // Keep track of the previous fileId to handle file switching

@@ -10,6 +10,7 @@ import ChatBox from "@/src/components/code-editor-components/ChatBox";
 import FileSystem from "@/src/components/FileSystem";
 import OutputBox from "@/src/components/OutputBox";
 import { cn } from "@/src/lib/utils";
+import { editor } from "monaco-editor";
 
 const CollaborativeEditorWithNoSSR = dynamic(
   () =>
@@ -29,7 +30,7 @@ export default function CodeEditorPage() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useUser();
   const [chatOpen, setChatOpen] = useState<boolean>(false);
-
+  const [editorContent, setEditorContent] = useState<string>("");
 
   const [fileId, setFileId] = useState<string>("");
   const [output, setOutput] = useState<string>("");
@@ -129,6 +130,8 @@ export default function CodeEditorPage() {
               fileId={fileId}
               permissions={permissions}
               setOutput={setOutput}
+              editorContent={editorContent}
+              setEditorContent={setEditorContent}
             />
           </div>
         </div>
@@ -182,7 +185,7 @@ export default function CodeEditorPage() {
           )}
           {chatOpen && (
             <div className="absolute w-[500px] right-30 bottom-2 z-50">
-              <ChatBox roomId={roomId} setChatOpen={setChatOpen} />
+              <ChatBox roomId={roomId} setChatOpen={setChatOpen} editorContent={editorContent} />
             </div>
           )}
         </div>

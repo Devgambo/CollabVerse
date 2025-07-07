@@ -35,9 +35,10 @@ interface Message {
 interface Props {
   setChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
   roomId: ParamValue;
+  editorContent: string;
 }
 
-function ChatBox({ setChatOpen, roomId }: Props) {
+function ChatBox({ setChatOpen, roomId , editorContent}: Props) {
   const sendMessage = useMutation(api.messages.sendMessage);
   const deleteMessage = useMutation(api.messages.deleteMessages);
   const messages = useQuery(api.messages.getMessages, {
@@ -80,11 +81,17 @@ function ChatBox({ setChatOpen, roomId }: Props) {
     
     setError(null);
     let needAiResponse = false;
+    let needAiResponseCodeRef = false;
     let messageContent = newMessage;
     
     if (newMessage.startsWith('/ai')) {
       messageContent = newMessage.slice(3).trim();
       needAiResponse = true;
+    }
+
+    if(newMessage.startsWith('/code')) {
+      messageContent = newMessage.slice(5).trim();
+      needAiResponseCodeRef=true;
     }
     
     if (!messageContent.trim()) {
@@ -108,6 +115,9 @@ function ChatBox({ setChatOpen, roomId }: Props) {
       
       if (needAiResponse) {
         await getAiResponse(messageContent);
+      }
+      if(needAiResponseCodeRef){
+        await getAiResponseCodeRef(messageContent, editorContent);
       }
     } catch (error) {
       console.error("Send message error:", error);
@@ -165,8 +175,47 @@ function ChatBox({ setChatOpen, roomId }: Props) {
       }
       
       const data = await response.json();
+
+      const processedResponse = processText(data.aiResponse);
+
+      const aiMessage: Message = {
+        roomId: roomId as string,
+        userId: null,
+        text: processedResponse,
+        isAI: true,
+        createdAt: Date.now(),
+      };
+
+      await sendMessage(aiMessage);
+    } catch (error) {
+      console.error("AI Response error:", error);
+      setError("AI is temporarily unavailable. Please try again later.");
+    } finally {
+      setAiFetching(false);
+    }
+  };
+
+  const getAiResponseCodeRef = async (aiReq: string, codeContent: string) => {
+    try {
+      setAiFetching(true);
+      setError(null);
       
-      console.log("responseeeeeeeeeeeeeee",data);
+      const response = await fetch(`/api/ai-v1/fix-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          codeContent: codeContent,
+          message: aiReq,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
 
       const processedResponse = processText(data.aiResponse);
 
@@ -433,6 +482,13 @@ function ChatBox({ setChatOpen, roomId }: Props) {
                 </span>{' '}
                 to chat with our AI assistant
               </p>
+              <p className="text-gray-300 text-sm p-4">
+                start with{' '}
+                <span className="font-bold font-mono bg-purple-500/20 px-2 py-1 rounded border border-purple-500/30">
+                  /code
+                </span>{' '}
+                to include the your current selected code file
+              </p>
             </div>
           </div>
         )}
@@ -466,7 +522,7 @@ function ChatBox({ setChatOpen, roomId }: Props) {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={`Type your message... (use /ai to chat with AI)`}
+              placeholder={`/ai & /code to chat with our AI`}
               className="w-full bg-black/40 border border-purple-500/60 rounded-2xl px-4 py-3 pr-12 text-white placeholder-gray-400 resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-500/80 transition-all backdrop-blur-sm hover:bg-black/50"
               rows={1}
               style={{ 

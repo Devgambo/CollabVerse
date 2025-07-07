@@ -3,11 +3,8 @@ import { NextResponse } from "next/server";
 
 export const POST =async (request : Request)=>{
         try {
-            const url = new URL(request.url);
-            const message = url.searchParams.get("message");
-            if (!message) {
-                return NextResponse.json({ error: "Message is required" }, { status: 400 });
-            }
+ 
+            const { codeContent, message } = await request.json();
 
             const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -26,8 +23,9 @@ export const POST =async (request : Request)=>{
                     - Focus on both fixing issues and teaching concepts
                     - short and concise 
                     - don't use any markdown notations except for when you write code.
-                
-                    context: User's question: ${message}
+
+                    Context: You have access to the user's code: ${codeContent}
+                    User's question: ${message}
 
                     Respond as if you're having a friendly chat with a fellow developer who needs your help.`;
 
