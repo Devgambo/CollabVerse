@@ -345,7 +345,7 @@ const FolderWithActions = ({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button
+                        <div
                           className="p-1 hover:bg-slate-700/60 rounded-sm"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -354,7 +354,7 @@ const FolderWithActions = ({
                           aria-label="New file"
                         >
                           <FileText className="h-3.5 w-3.5 text-green-400" />
-                        </button>
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent
                         side="top"
