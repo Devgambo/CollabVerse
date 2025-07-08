@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "Collabverse",
   description: "Colloborative Editor",
   icons: {
-    icon: "/convex.svg",
+    icon: "logo.png",
   },
 };
 

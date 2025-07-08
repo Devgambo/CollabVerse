@@ -136,7 +136,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Image className="w-32 h-auto" src="/logo.png" alt="CodeSync" />
+            <Image width={225} height={225} className="w-32 h-auto" src="/logo.png" alt="CodeSync" />
           </motion.div>
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -444,7 +444,7 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div className="space-y-4">
-              <Image className="w-32 h-auto" src="/logo.png" alt="CodeSync" />
+              <Image width={225} height={225} className="w-32 h-auto" src="/logo.png" alt="CodeSync" />
               <p className="text-purple-200">
                 The future of collaborative coding. Built for developers who dream big.
               </p>
