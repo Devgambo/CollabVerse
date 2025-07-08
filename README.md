@@ -1,7 +1,7 @@
-# CodeSync
+# CodeSync  
 
+--------------------------- ![image](https://github.com/user-attachments/assets/352e97f5-d782-489d-8abe-da9bace0891f)
 ### Collaborate. Innovate. Elevate.
-
 
 CodeSync is a real-time collaborative coding environment powered by ai that allows developers to write, share, and edit code together. It features a shared file system, a collaborative code editor, a whiteboard for brainstorming, and a chat for communication.
 
