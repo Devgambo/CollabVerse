@@ -33,7 +33,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import emailjs from "@emailjs/browser";
-import Image from "next/image";
 import { toast } from "sonner";
 
 // ======== Component: AnimatedBackground ========
@@ -486,8 +485,8 @@ const ContactForm = () => {
             Get in Touch
           </h2>
           <p className="text-purple-200 text-xl">
-            Have questions, suggestions, or just want to say hello? We'd love to
-            hear from you!
+            Have questions, suggestions, or just want to say hello? We&apos;d
+            love to hear from you!
           </p>
         </div>
 
@@ -610,7 +609,8 @@ const ContactForm = () => {
                   >
                     <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
                     <p className="text-green-400 font-medium text-lg">
-                      Message sent successfully! We'll get back to you soon.
+                      Message sent successfully! We&apos;ll get back to you
+                      soon.
                     </p>
                   </motion.div>
                 )}
@@ -764,11 +764,12 @@ export default function AboutPage() {
       <main className="container mx-auto px-6 py-16 relative z-10">
         {/* Hero Section */}
         <motion.section
-          className="text-center mb-20"
+          className="flex flex-col items-center justify-center min-h-[60vh] text-center mb-20"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
+          <img className="w-24 h-auto mb-2" src="/logo.png" alt="CodeSync" />
           <Badge className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white border-purple-500/30 px-6 py-2 text-sm font-medium mb-6">
             <Heart className="w-4 h-4 mr-2" />
             About CodeSync
