@@ -7,6 +7,7 @@ import {
 import { LiveList, LiveMap } from "@liveblocks/client";
 import { Id } from "@/convex/_generated/dataModel";
 import { RoomProvider } from "@/src/liveblocks.config";
+import LoadingScreen from "../components/Loading";
 
 interface RoomDataProps {
   roomId: Id<"rooms">;
@@ -40,7 +41,7 @@ export default function LiveblocksProvider({
           layerIds: new LiveList([]),
         }}
       >
-        <ClientSideSuspense fallback={<div>Loading...</div>}>
+        <ClientSideSuspense fallback={<div>{<LoadingScreen/>}</div>}>
           {children}
         </ClientSideSuspense>
       </RoomProvider>
