@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, MessageCircleIcon } from "lucide-react";
+import { MessageCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import ChatBox from "@/src/components/code-editor-components/ChatBox";
 import FileSystem from "@/src/components/FileSystem";
 import OutputBox from "@/src/components/OutputBox";
 import { cn } from "@/src/lib/utils";
+import LoadingScreen from "@/src/components/Loading";
 
 const CollaborativeEditorWithNoSSR = dynamic(
   () =>
@@ -69,12 +70,7 @@ export default function CodeEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0d1117]">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
-          <p className="text-gray-400">Verifying access...</p>
-        </div>
-      </div>
+      <LoadingScreen/>
     );
   }
 
